@@ -17,7 +17,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
         return <Redirect href="/(protected)/user" />;
       case 'admin':
         return <Redirect href="/(protected)/admin" />;
-      case 'stockmanager':
+      case 'stock_manager':
         return <Redirect href="/(protected)/stockmanager" />;
       default:
         return <Redirect href="/signIn" />;

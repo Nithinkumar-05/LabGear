@@ -2,7 +2,7 @@ import { Tabs,Redirect } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import CustomHeader from "@/components/CustomHeader";
 import { useAuth } from "@/routes/AuthContext";
-
+import ProtectedRoute from "@/utils/ProtectedRoute";
 export default function TabsLayout() {
   const { user } = useAuth();
 
@@ -10,12 +10,13 @@ export default function TabsLayout() {
   if(user.role !== "admin"){
     if(user.role === "user"){
       return <Redirect href="/(user)/" />;
-     } else if(user.role === "stockmanager"){
+     } else if(user.role === "stock_manager"){
       return <Redirect href="/(stockmanager)/" />;
      }
   }
   
   return (
+    <ProtectedRoute allowedRoles={["admin"]}>
       <Tabs initialRouteName="home">
         <Tabs.Screen
           name="home"
@@ -38,5 +39,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
+      </ProtectedRoute>
   );
 }

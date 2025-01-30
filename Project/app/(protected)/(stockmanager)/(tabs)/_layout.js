@@ -36,7 +36,7 @@ export default function TabsLayout() {
   }
 
   return (
-    // <ProtectedRoute allowedRoles={["stockmanager"]}>
+    // <ProtectedRoute allowedRoles={["stock_manager"]}>
       <Tabs initialRouteName="home">
         <Tabs.Screen
           name="home"
@@ -48,7 +48,16 @@ export default function TabsLayout() {
             header: () => <CustomHeader />,
           }}
         />
-        {/* Add more Tabs.Screen components here if needed */}
+        <Tabs.Screen
+         name="inventory"
+         options={{
+          title: "Stock",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list" size={size} color={color} />
+          ),
+          header: () => <CustomHeader />,
+          }}
+          />
       </Tabs>
     // </ProtectedRoute>
   );

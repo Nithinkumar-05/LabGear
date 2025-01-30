@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CustomHeader from "@/components/CustomHeader";
 import { useAuth } from "@/routes/AuthContext";
 import Loading from "@/components/Loading";
+import ProtectedRoute from "@/utils/ProtectedRoute";
 export default function TabsLayout() {
   const { user } = useAuth();
 
@@ -17,13 +18,13 @@ export default function TabsLayout() {
   if(user.role !== "user"){
     if(user.role === "admin"){
       return <Redirect href="/(admin)/" />;
-     } else if(user.role === "stockmanager"){
+     } else if(user.role === "stock_manager"){
       return <Redirect href="/(stockmanager)/" />;
      }
   }
   
   return (
-    // <ProtectedRoute allowedRoles={["user"]}> {/* Allow only users */}
+    <ProtectedRoute allowedRoles={["user"]}> {/* Allow only users */}
       <Tabs initialRouteName="index" options={{headerShown: false}}>
         {/* Index Tab (Default Tab) */}
         <Tabs.Screen
@@ -61,6 +62,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-    // </ProtectedRoute>
+    </ProtectedRoute>
   );
 }

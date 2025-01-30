@@ -3,9 +3,9 @@ import { useAuth } from '@/routes/AuthContext';
 
 const Home = () => {
     const {logout,user}= useAuth();
-    return ( <View>
-        <Text>Home of Stock Manager</Text>
-        <Text>Role:{user.role}</Text>
+    return ( <View className="flex-1 justify-center items-center">
+        <Text className="text-lg font-semibold">Home of Stock Manager</Text>
+        <Text className="text-lg mb-6">Role: {user.role}</Text>
         <Button title="Logout" onPress={logout} />
     </View> );
 }
