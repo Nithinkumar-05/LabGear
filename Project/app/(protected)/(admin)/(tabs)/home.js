@@ -12,7 +12,6 @@ const Home = () => {
             </View>
         );
     }
-
     return (
         <View style={styles.container}>
             <Text style={styles.heading}>Home of Admin</Text>

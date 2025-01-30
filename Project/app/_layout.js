@@ -1,4 +1,4 @@
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, Stack, useRouter, useSegments } from "expo-router";
 import "../global.css";
 import { View } from "react-native";
 import { useAuth, AuthProvider } from "@/routes/AuthContext";
@@ -29,7 +29,22 @@ const MainLayout = () => {
 
   return (
     <View className="flex-1">
-      <Slot />
+      {/* <Stack>
+        <Stack.Screen
+          name="signIn"
+          options={{
+            headerShown: false, // Hide the header for the login screen
+          }}
+        />
+        <Stack.Screen
+          name="(protected)"
+          options={{
+            headerShown: false, // Hide the header for protected screens
+          }}
+        />
+        
+      </Stack> */}
+      <Slot/>
     </View>
   );
 };

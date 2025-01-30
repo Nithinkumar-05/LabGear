@@ -2,7 +2,13 @@ import { Stack } from "expo-router";
 
 const _layout = () => {
     return ( <Stack>
-        <Stack.Screen name="home" />
+        <Stack.Screen name="(tabs)"
+            options = {
+                {
+                    headerShown: false, // Hide the header
+                }
+            }
+        />
     </Stack> );
 }
  

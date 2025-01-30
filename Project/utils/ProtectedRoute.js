@@ -1,53 +1,30 @@
-import { useEffect } from "react";
-import { useAuth } from "../routes/AuthContext";
-import { View, ActivityIndicator, Text } from "react-native";
-import { useRouter } from "expo-router";
+import React from 'react';
+import { useAuth } from '../routes/AuthContext';
+import { Redirect } from 'expo-router';
 
-const ProtectedRoute = ({ children, requiredRole }) => {
-  const { user, loading, isAuthenticated } = useAuth();
-  const router = useRouter();
+const ProtectedRoute = ({ allowedRoles, children }) => {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        // Redirect to the sign-in page if not authenticated
-        router.replace("/signIn");
-        return;
-      }
+  // If the user is not authenticated, redirect to the login screen
+  if (!user) {
+    return <Redirect href="/signIn" />;
+  }
 
-      // Redirect to the appropriate dashboard if the role doesn't match
-      if (requiredRole && user.role !== requiredRole) {
-        const roleBasedRoutes = {
-          admin: "/(protected)/(admin)",
-          user: "/(protected)/(user)",
-          stock_manager: "/(protected)/(stockmanager)",
-        };
-
-        const redirectTo = roleBasedRoutes[user.role] || "/";
-        router.replace(redirectTo);
-      }
+  // If the user's role is not allowed, redirect to their respective dashboard
+  if (!allowedRoles.includes(user.role)) {
+    switch (user.role) {
+      case 'user':
+        return <Redirect href="/(protected)/user" />;
+      case 'admin':
+        return <Redirect href="/(protected)/admin" />;
+      case 'stockmanager':
+        return <Redirect href="/(protected)/stockmanager" />;
+      default:
+        return <Redirect href="/signIn" />;
     }
-  }, [loading, isAuthenticated, user, requiredRole, router]);
-
-  // Show a loader while checking authentication state
-  if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
   }
 
-  // If user is not authorized for this role, do not render children
-  if (!isAuthenticated || (requiredRole && user.role !== requiredRole)) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <Text>You do not have permission to access this page.</Text>
-      </View>
-    );
-  }
-
-  // Render children for authorized users
+  // If the user is authenticated and has the required role, render the children
   return children;
 };
 

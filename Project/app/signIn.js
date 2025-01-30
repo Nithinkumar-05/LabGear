@@ -5,6 +5,7 @@ import { useAuth } from "../routes/AuthContext";
 import { ActivityIndicator } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
+import CustomKeyboard from "../components/CustomKeyboard";
 const SignIn = () => {
   const { login } = useAuth();
   const router = useRouter();
@@ -62,58 +63,65 @@ const SignIn = () => {
   };
 
   return (
-    <View className="flex-1 bg-white justify-center px-6 shadow-lg">
-      <View className="items-center mb-6 right-10 mr-10">
+    <CustomKeyboard>
+    <View className="flex-1 bg-white justify-center items-center px-6  shadow-3xl">
+      <View className="mb-6 right-10">
         <Image
           source={require("../assets/images/lab_gear.jpg")}
-          style={{ width: hp(20), height: hp(20) }}
-          className=""
+          style={{ width: hp(40), height: hp(20) }}
+          className="right-2"
         />
       </View>
       
-      <View className="w-full border border-gray-300 rounded-lg p-6">
-        <Text className="text-2xl font-semibold mb-4">Sign In</Text>
+      <View className="w-full border border-gray-300 rounded-3xl p-6 shadow-black shadow-3xl mb-6">
+        <Text className="text-2xl font-semibold mb-4 text-center">Sign In</Text>
         {error && <Text className="text-red-500 text-center mb-4">{error}</Text>}
-
-        <TextInput
-          placeholder="Email"
-          onChangeText={(text) => (emailRef.current = text)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="border border-gray-300 rounded-lg p-4 text-base mb-4"
-        />
-
-        <View className="border border-gray-300 rounded-lg flex-row items-center mb-4 p-4">
+        <View>
+          <Text className="text-lg font-semibold ml-2 mb-2">Email</Text>
           <TextInput
-            placeholder="Password"
-            onChangeText={(text) => (passwordRef.current = text)}
-            secureTextEntry={!passwordVisible}
-            className="flex-1 text-base"
+            placeholder="Enter your email"
+            onChangeText={(text) => (emailRef.current = text)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            className="border border-gray-300 rounded-lg p-4 text-base mb-4"
           />
-          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-            <Ionicons
-              name={passwordVisible ? "eye-off" : "eye"}
-              size={24}
-              color="gray"
+        </View>
+        <View>
+          <Text className="text-lg font-semibold ml-2 mb-2">Password</Text>
+
+          <View className="border border-gray-300 rounded-lg flex-row items-center mb-4 p-2">
+            <TextInput
+              className="flex-1 text-base p-4"
+              placeholder="Enter your password"
+              onChangeText={(text) => (passwordRef.current = text)}
+              secureTextEntry={!passwordVisible}
             />
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} className="p-2">
+              <Ionicons
+                name={passwordVisible ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity
           onPress={signIn}
           disabled={loading}
-          className={`p-4 rounded-lg items-center ${
+          className={`p-4 rounded-lg items-center mb-6 ${
             loading ? "bg-gray-400" : "bg-black"
           }`}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white font-semibold text-base">Login →</Text>
+            <Text className="text-white font-semibold text-base rounded-3xl">Login →</Text>
           )}
         </TouchableOpacity>
       </View>
     </View>
+    </CustomKeyboard>
   );
 };
 

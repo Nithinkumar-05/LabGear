@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Project",
+    "name": "Lab Gear",
     "slug": "Project",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/lab_gear.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/lab_gear.jpg",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.nithineruventi.LabGear"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +37,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f8cc03df-7575-4e49-bb68-4ffff9370a41"
+      }
     }
   }
 }
