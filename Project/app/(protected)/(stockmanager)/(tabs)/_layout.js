@@ -36,7 +36,7 @@ export default function TabsLayout() {
   }
 
   return (
-    // <ProtectedRoute allowedRoles={["stock_manager"]}>
+    <ProtectedRoute allowedRoles={["stock_manager"]}>
       <Tabs initialRouteName="home">
         <Tabs.Screen
           name="home"
@@ -59,6 +59,6 @@ export default function TabsLayout() {
           }}
           />
       </Tabs>
-    // </ProtectedRoute>
+    </ProtectedRoute>
   );
 }
