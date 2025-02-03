@@ -20,6 +20,7 @@
         "foregroundImage": "./assets/images/lab_gear.jpg",
         "backgroundColor": "#ffffff"
       },
+      "softwareKeyboardLayoutMode":"pan",
       "package": "com.nithineruventi.LabGear",
       "permissions": [
         "CAMERA",
