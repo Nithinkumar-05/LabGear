@@ -1,49 +1,30 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { useAuth } from '@/routes/AuthContext';
+import HomeLoader from '@/components/HomeLoader'; // Import the loader component
 
 const Home = () => {
     const { user, loading, logout } = useAuth();
 
+    // Show loading state
     if (loading) {
         return (
-            <View style={styles.container}>
-                <Text>Loading...</Text>
+            <View className="flex-1 mb-10 bottom-10 bg-slate-100">
+                <HomeLoader />
             </View>
         );
     }
+
+    // Show content when not loading
     return (
-        <View style={styles.container}>
-            <Text style={styles.heading}>Home of Admin</Text>
-            <Text style={styles.welcomeText}>Welcome, {user?.username || 'User'}!</Text>
-            <Text style={styles.roleText}>Role: {user?.role || 'N/A'}</Text>
-            <Button title="Logout" onPress={logout} />
+        <View className="flex-1 p-5 bg-white">
+            <View>
+                <Text className="text-xl font-bold">
+                    Welcome, {user ? user.username : 'Guest'}
+                </Text>
+            </View>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        padding: 20,
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    welcomeText: {
-        fontSize: 18,
-        marginBottom: 5,
-    },
-    roleText: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 20,
-    },
-});
 
 export default Home;

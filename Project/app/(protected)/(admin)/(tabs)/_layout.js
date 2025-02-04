@@ -38,6 +38,16 @@ export default function TabsLayout() {
             header: () => <CustomHeader />,
           }}
         />
+        <Tabs.Screen
+          name="more"
+          options={{
+            title: "More",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="ellipsis-horizontal" size={size} color={color} />
+              ),
+              header: () => <CustomHeader />,
+              }}
+              />
       </Tabs>
       </ProtectedRoute>
   );

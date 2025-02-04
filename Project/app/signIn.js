@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../routes/AuthContext";
@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 const SignIn = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated, role } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,6 +16,7 @@ const SignIn = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
 
+  // Navigate to the appropriate dashboard based on the user's role
   const navigateToRoleDashboard = (userRole) => {
     switch (userRole) {
       case "admin":
@@ -32,6 +33,14 @@ const SignIn = () => {
     }
   };
 
+  // Check if the user is already authenticated on component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigateToRoleDashboard(role);
+    }
+  }, [isAuthenticated, role]);
+
+  // Handle the sign-in process
   const signIn = async () => {
     setLoading(true);
     setError(null);
@@ -58,11 +67,20 @@ const SignIn = () => {
     }
   };
 
+  // If the user is already authenticated, show a loading indicator
+  if (isAuthenticated) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 100}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : undefined}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
         <View className="flex-1 bg-white justify-center items-center px-6 shadow-3xl">

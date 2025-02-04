@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(undefined);
   const [loading, setLoading] = useState(true);
-
+  const [role,setRole] = useState("");
   // Enhanced getUserData function to fetch complete user details
   const getUserData = useCallback(async (userId) => {
     try {
@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
       
       // Update local state
       setUser(mergedUserData);
+      setRole(mergedUserData.role);
     } catch (error) {
       console.error("Error updating user data:", error);
     }
@@ -148,6 +149,8 @@ export function AuthProvider({ children }) {
       
       await setDoc(doc(db, "users", response.user.uid), userData);
       setUser(userData);
+      setIsAuthenticated(true);
+      setRole(userData.role);
       return { success: true, data: userData };
     } catch (e) {
       let msg = e.message;
