@@ -23,6 +23,7 @@ const Home = () => {
                     Welcome, {user ? user.username : 'Guest'}
                 </Text>
             </View>
+            
         </View>
     );
 };

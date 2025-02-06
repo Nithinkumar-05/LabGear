@@ -15,10 +15,12 @@ import * as ImagePicker from "expo-image-picker";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { heightPercentageToDP as hp,widthPercentageToDP as wp } from "react-native-responsive-screen";
+import {useAuth} from'@/routes/AuthContext';
 export default function Profile() {
+  const {user} = useAuth();
   const [formData, setFormData] = useState({
-    username: "",
-    email: "",
+    username: user.username,
+    email: user.email,
     image: null,
   });
   const [loading, setLoading] = useState(false);

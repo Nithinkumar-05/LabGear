@@ -1,5 +1,5 @@
 import { Tabs,Redirect } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons,AntDesign } from '@expo/vector-icons';
 import CustomHeader from "@/components/CustomHeader";
 import { useAuth } from "@/routes/AuthContext";
 import ProtectedRoute from "@/utils/ProtectedRoute";
@@ -38,6 +38,18 @@ export default function TabsLayout() {
             header: () => <CustomHeader />,
           }}
         />
+        <Tabs.Screen
+          name="equipment"
+          options={
+            {
+              title:"Equipment",
+              tabBarIcon:({color,size})=>(
+                <AntDesign name="shoppingcart" size={size} color={color} />
+              ),header:()=><CustomHeader/>,
+              tabBarHideOnKeyboard:true,
+
+            }
+          }/>
         <Tabs.Screen
           name="more"
           options={{
