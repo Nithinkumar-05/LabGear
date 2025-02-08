@@ -34,7 +34,7 @@ const AddEquipment = () => {
     const [lowStockAlert, setLowStockAlert] = useState('');
     const [image, setImage] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const [equipmentType,setEquipmentType] = useState('');
+    const [equipmentType, setEquipmentType] = useState('');
     const router = useRouter();
 
     const pickImage = async () => {
@@ -45,7 +45,7 @@ const AddEquipment = () => {
         }
 
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images','livePhotos'],
+            mediaTypes: ['images', 'livePhotos'],
             aspect: [5, 4],
             quality: 1,
         });
@@ -89,16 +89,16 @@ const AddEquipment = () => {
     return (
         <ScrollView className="flex-1 bg-gray-50">
             <View className="p-6">
-                <Text className="text-2xl font-bold text-gray-800 mb-6">Add Equipment</Text>
+                {/* <Text className="text-2xl font-bold text-gray-800 mb-6">Add Equipment</Text> */}
 
                 <View className="items-center mb-6">
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={pickImage}
                         className="w-48 h-48 bg-white rounded-xl shadow-black shadow-lg items-center justify-center border-2 border-dashed border-gray-300"
                     >
                         {image ? (
-                            <Image 
-                                source={{ uri: image }} 
+                            <Image
+                                source={{ uri: image }}
                                 className="w-full h-full rounded-xl"
                             />
                         ) : (
@@ -112,34 +112,30 @@ const AddEquipment = () => {
                 <View className="bg-white rounded-xl shadow-black shadow-lg p-4 mb-6">
                     <Text className="text-sm font-medium text-gray-700 mb-3">Equipment Type</Text>
                     <View className="flex-row justify-between gap-3">
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => setEquipmentType('consumable')}
-                            className={`flex-1 p-4 rounded-xl border-2 ${
-                                equipmentType === 'consumable' 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-200'
-                            }`}
+                            className={`flex-1 p-4 rounded-xl border-2 ${equipmentType === 'consumable'
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200'
+                                }`}
                         >
-                            <Text className={`text-center font-semibold ${
-                                equipmentType === 'consumable' 
-                                ? 'text-blue-500' 
-                                : 'text-gray-600'
-                            }`}>Consumable</Text>
+                            <Text className={`text-center font-semibold ${equipmentType === 'consumable'
+                                    ? 'text-blue-500'
+                                    : 'text-gray-600'
+                                }`}>Consumable</Text>
                         </TouchableOpacity>
-                        
-                        <TouchableOpacity 
+
+                        <TouchableOpacity
                             onPress={() => setEquipmentType('non-consumable')}
-                            className={`flex-1 p-4 rounded-xl border-2 ${
-                                equipmentType === 'non-consumable' 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-200'
-                            }`}
+                            className={`flex-1 p-4 rounded-xl border-2 ${equipmentType === 'non-consumable'
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200'
+                                }`}
                         >
-                            <Text className={`text-center font-semibold ${
-                                equipmentType === 'non-consumable' 
-                                ? 'text-blue-500' 
-                                : 'text-gray-600'
-                            }`}>Non-Consumable</Text>
+                            <Text className={`text-center font-semibold ${equipmentType === 'non-consumable'
+                                    ? 'text-blue-500'
+                                    : 'text-gray-600'
+                                }`}>Non-Consumable</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -147,7 +143,7 @@ const AddEquipment = () => {
                 <View className="space-y-4">
                     <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">Equipment Name</Text>
-                        <TextInput 
+                        <TextInput
                             placeholder="Enter equipment name"
                             value={name}
                             onChangeText={setName}
@@ -157,7 +153,7 @@ const AddEquipment = () => {
 
                     <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">Quantity</Text>
-                        <TextInput 
+                        <TextInput
                             placeholder="Enter quantity"
                             value={quantity}
                             onChangeText={setQuantity}
@@ -168,7 +164,7 @@ const AddEquipment = () => {
 
                     <View>
                         <Text className="text-sm font-medium text-gray-700 mb-1">Low Stock Alert</Text>
-                        <TextInput 
+                        <TextInput
                             placeholder="Set low stock alert threshold"
                             value={lowStockAlert}
                             onChangeText={setLowStockAlert}
@@ -177,7 +173,7 @@ const AddEquipment = () => {
                         />
                     </View>
 
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         className={`p-4 rounded-xl shadow-black shadow-lg mt-4 ${uploading ? "bg-gray-400" : "bg-green-500"}`}
                         onPress={saveEquipment}
                         disabled={uploading}

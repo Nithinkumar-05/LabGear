@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView, Image } from 'react-native';
 import { Appbar } from 'react-native-paper';
-
+import { useAuth } from '@/routes/AuthContext';
+import { useRouter } from 'expo-router';
 const CustomHeader = () => {
   // Get the current date
+  const { user } = useAuth();
   const currentDate = new Date();
+  const router = useRouter();
   const formattedDate = currentDate.toLocaleDateString('en-US', {
     weekday: 'long', // Full weekday name (e.g., "Monday")
     year: 'numeric', // Full year (e.g., "2023")
@@ -22,7 +25,7 @@ const CustomHeader = () => {
 
       {/* Header container */}
       <View style={styles.headerContainer}>
-        
+
 
         {/* Header with Appbar */}
         <Appbar.Header style={styles.appbarHeader}>
@@ -32,7 +35,12 @@ const CustomHeader = () => {
             }
           />
           {/* Add additional Appbar.Action components here for icons or buttons */}
-          <Appbar.Action icon="bell"  onPress={() => {}} />
+          <Appbar.Action icon="bell"
+            onPress={() => {
+              // console.log(user)
+              // console.log("Notifications")
+              router.push(`/(${user.role})/notifications`)
+            }} />
         </Appbar.Header>
       </View>
     </SafeAreaView>
@@ -41,13 +49,13 @@ const CustomHeader = () => {
 
 // Define styles using StyleSheet
 const styles = StyleSheet.create({
-  
+
   headerContainer: {
     backgroundColor: '#3b82f6', // Blue background
   },
   appbarHeader: {
-    backgroundColor:'#3b82f6' , // Transparent background for Appbar
-    
+    backgroundColor: '#3b82f6', // Transparent background for Appbar
+
   },
   titleText: {
     color: 'white', // White text color
