@@ -1,46 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Modal,ActivityIndicator } from 'react-native';
 import { useAuth } from '@/routes/AuthContext';
 import { componentsRef, requestsRef } from '@/firebaseConfig';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { AntDesign } from '@expo/vector-icons';
-
-
-const EquipmentSection = ({ title, items, addToCart }) => (
-    <View className="mb-6">
-        <Text className="text-lg font-bold mb-3">{title}</Text>
-        <View className="space-y-4">
-            {items.map((item) => (
-                <View key={item.id} className="bg-white p-4 rounded-lg shadow mt-2">
-                    <View className="flex-row justify-between items-center">
-                        <View className="flex-row items-center flex-1">
-                            <Image 
-                                source={{ uri: item.imageUrl }}
-                                className="w-16 h-16 rounded-lg"
-                            />
-                            <View className="ml-4 flex-1">
-                                <Text className="text-lg font-semibold">{item.name}</Text>
-                                <Text className="text-sm text-gray-500">Available: {item.quantity}</Text>
-                                {item.quantity <= item.lowStockAlert && (
-                                    <Text className="text-xs text-red-500">Low Stock Alert!</Text>
-                                )}
-                            </View>
-                            <TouchableOpacity 
-                                className="bg-blue-500 px-4 py-2 rounded-lg"
-                                onPress={() => addToCart(item)}
-                                disabled={item.quantity === 0}
-                            >
-                                <Text className="text-white">
-                                    {item.quantity === 0 ? 'Out of Stock' : 'Add'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            ))}
-        </View>
-    </View>
-);
+import EquipmentSection from '@/components/EquipmentSection';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 const Home = () => {
     const { user, loading } = useAuth();
@@ -49,6 +14,9 @@ const Home = () => {
     const [requests, setRequests] = useState([]);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
+    const [showRequestDetails, setShowRequestDetails] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+
 
     useEffect(() => {
         fetchEquipment();
@@ -83,6 +51,11 @@ const Home = () => {
         } catch (error) {
             console.error('Error fetching requests:', error);
         }
+    };
+
+    const handleRequestPress = (request) => {
+        setSelectedRequest(request);
+        setShowRequestDetails(true);
     };
 
     const addToCart = (item) => {
@@ -131,7 +104,6 @@ const Home = () => {
                 })),
                 status: 'pending',
                 createdAt: serverTimestamp(),
-                labName: user.labdetails
             };
 
             await addDoc(requestsRef, requestData);
@@ -150,6 +122,7 @@ const Home = () => {
             </View>
         );
     }
+    
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -207,52 +180,56 @@ const Home = () => {
             </View>
 
             <ScrollView className="flex-1 p-4">
-                {activeTab === 'available' ? (
-                    <View>
-                        <EquipmentSection 
-                            title="Non-Consumable Equipment" 
-                            items={equipment.nonConsumable}
-                            addToCart={addToCart}
-                        />
-                        <EquipmentSection 
-                            title="Consumable Equipment" 
-                            items={equipment.consumable}
-                            addToCart={addToCart}
-                        />
-                    </View>
-                ) : (
-                    <View className="space-y-4">
-                        {requests.map((request) => (
-                            <View key={request.id} className="bg-white p-4 rounded-lg shadow">
-                                <View className="space-y-2">
-                                    <View className="flex-row justify-between items-center">
-                                        <Text className="text-lg font-semibold">
-                                            Request #{request.id.slice(0, 6)}
-                                        </Text>
-                                        <View className={`px-3 py-1 rounded-full ${
-                                            request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
-                                        }`}>
-                                            <Text className={`text-sm font-medium ${
-                                                request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
-                                            }`}>
-                                                {request.status}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    {request.equipment.map((item, index) => (
-                                        <Text key={index} className="text-gray-600">
-                                            {item.name} - Qty: {item.quantity} ({item.type})
-                                        </Text>
-                                    ))}
-                                    <Text className="text-sm text-gray-500">
-                                        Requested: {new Date(request.createdAt?.toDate()).toLocaleDateString()}
-                                    </Text>
-                                </View>
+    {activeTab === 'available' ? (
+        <View>
+            <EquipmentSection 
+                title="Non-Consumable Equipment" 
+                items={equipment.nonConsumable}
+                addToCart={addToCart}
+            />
+            <EquipmentSection 
+                title="Consumable Equipment" 
+                items={equipment.consumable}
+                addToCart={addToCart}
+            />
+        </View>
+    ) : (
+        <View className="space-y-4">
+            {requests.map((request) => (
+                <TouchableOpacity 
+                    key={request.id} 
+                    className="bg-white p-4 rounded-lg shadow mb-2"
+                    onPress={() => handleRequestPress(request)}
+                >
+                    <View className="space-y-2">
+                        <View className="flex-row justify-between items-center">
+                            <Text className="text-lg font-semibold">
+                                Request #{request.id.slice(0, 6)}
+                            </Text>
+                            <View className={`px-3 py-1 rounded-full ${
+                                request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
+                            }`}>
+                                <Text className={`text-sm font-medium ${
+                                    request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
+                                }`}>
+                                    {request.status}
+                                </Text>
                             </View>
+                        </View>
+                        {request.equipment.map((item, index) => (
+                            <Text key={index} className="text-gray-600">
+                                {item.name} - Qty: {item.quantity} ({item.type})
+                            </Text>
                         ))}
+                        <Text className="text-sm text-gray-500">
+                            Requested: {new Date(request.createdAt?.toDate()).toLocaleDateString()}
+                        </Text>
                     </View>
-                )}
-            </ScrollView>
+                </TouchableOpacity>
+            ))}
+        </View>
+    )}
+</ScrollView>
 
                 <Modal visible={showCart} transparent animationType="slide">
                     <View className="flex-1 justify-end">
@@ -315,6 +292,14 @@ const Home = () => {
                         </View>
                     </View>
                 </Modal>
+                <RequestDetailsModal 
+                    visible={showRequestDetails}
+                    request={selectedRequest}
+                    onClose={() => {
+                        setShowRequestDetails(false);
+                        setSelectedRequest(null);
+                    }}
+                />
         </View>
     );
 };
