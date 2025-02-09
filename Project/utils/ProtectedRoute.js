@@ -24,7 +24,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     }
   }
 
-  // If the user is authenticated and has the required role, render the children
   return children;
 };
 
