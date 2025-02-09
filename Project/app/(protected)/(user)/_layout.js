@@ -13,7 +13,11 @@ const _layout = () => {
 
       <Stack.Screen
         name="notifications"
-        options={{ presentation: "fullScreenModal", title: "Notifications" }}
+        options={{ presentation: "fullScreenModal", title: "Notifications", animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="requestsummary"
+        options={{ presentation: "fullScreenModal", title: "RequestSummary", animation: "slide_from_right" }}
       />
     </Stack>
   );

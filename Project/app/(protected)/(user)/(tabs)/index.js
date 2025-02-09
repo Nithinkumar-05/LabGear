@@ -5,8 +5,8 @@ import { componentsRef, requestsRef } from '@/firebaseConfig';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { AntDesign } from '@expo/vector-icons';
 import EquipmentSection from '@/components/EquipmentSection';
-import RequestDetailsModal from '@/components/RequestDetailsModal';
-
+// import RequestDetailsModal from '@/components/RequestDetailsModal';
+import { useRouter } from 'expo-router';
 const Home = () => {
     const { user, loading } = useAuth();
     const [activeTab, setActiveTab] = useState('available');
@@ -17,6 +17,7 @@ const Home = () => {
     const [showRequestDetails, setShowRequestDetails] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
 
+    const router = useRouter();
 
     useEffect(() => {
         fetchEquipment();
@@ -54,8 +55,14 @@ const Home = () => {
     };
 
     const handleRequestPress = (request) => {
-        setSelectedRequest(request);
-        setShowRequestDetails(true);
+        // setSelectedRequest(request);
+        // setShowRequestDetails(true);
+        // console.log(request);
+        router.push({
+            pathname: "/(user)/requestsummary",
+            params: { requestId: request.id }
+        });
+
     };
 
     const addToCart = (item) => {
@@ -139,20 +146,7 @@ const Home = () => {
                         </View>
 
                     </View>
-                    <View className="flex-row justify-end">
-                        <TouchableOpacity
-                            className="relative p-3 bg-blue-600 rounded-full shadow-lg"
-                            onPress={() => setShowCart(true)}
-                        >
-                            <AntDesign name="shoppingcart" size={24} color={"#fff"} />
 
-                            {cart.length > 0 && (
-                                <View className="absolute -top-2 -right-2 bg-red-600 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
-                                    <Text className="text-white text-xs font-bold">{cart.length}</Text>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </View>
 
@@ -179,7 +173,22 @@ const Home = () => {
 
             <ScrollView className="flex-1 p-4">
                 {activeTab === 'available' ? (
+
                     <View>
+                        <View className="flex-row justify-end">
+                            <TouchableOpacity
+                                className="relative p-3 bg-blue-600 rounded-full shadow-lg"
+                                onPress={() => setShowCart(true)}
+                            >
+                                <AntDesign name="shoppingcart" size={24} color={"#fff"} />
+
+                                {cart.length > 0 && (
+                                    <View className="absolute -top-2 -right-2 bg-red-600 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+                                        <Text className="text-white text-xs font-bold">{cart.length}</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                         <EquipmentSection
                             title="Non-Consumable Equipment"
                             items={equipment.nonConsumable}
@@ -288,14 +297,14 @@ const Home = () => {
                     </View>
                 </View>
             </Modal>
-            <RequestDetailsModal
+            {/* <RequestDetailsModal
                 visible={showRequestDetails}
                 request={selectedRequest}
                 onClose={() => {
                     setShowRequestDetails(false);
                     setSelectedRequest(null);
                 }}
-            />
+            /> */}
         </View>
     );
 };
