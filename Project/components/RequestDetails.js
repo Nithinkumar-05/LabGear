@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
-import { Chip } from "react-native-paper";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/firebaseConfig";
 
 const RequestDetails = ({ request }) => {
     const [labDetails, setLabDetails] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigation = useNavigation();
 
     useEffect(() => {
         const fetchLabDetails = async () => {
@@ -36,14 +31,7 @@ const RequestDetails = ({ request }) => {
 
     return (
         <View className="flex-1 bg-white">
-            {/* Header */}
-            {/* <View className="flex-row items-center justify-between px-4 py-4 bg-blue-500">
-                <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-                    <AntDesign name="arrowleft" size={24} color="white" />
-                </TouchableOpacity>
-                <Text className="text-lg font-bold text-white">Request Details</Text>
-                <View className="w-8" /> {/* Placeholder for alignment */}
-            {/* </View> */}
+
 
             {/* Content */}
             <ScrollView className="flex-1 p-4">

@@ -5,6 +5,7 @@ import { Redirect } from 'expo-router';
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const { user } = useAuth();
 
+  console.log(user)
   // If the user is not authenticated, redirect to the login screen
   if (!user) {
     return <Redirect href="/signIn" />;
