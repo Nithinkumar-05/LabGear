@@ -16,15 +16,15 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(undefined);
   const [loading, setLoading] = useState(true);
-  const [role,setRole] = useState("");
-  // Enhanced getUserData function to fetch complete user details
+  const [role, setRole] = useState("");
+
+  // Fetch complete user details
   const getUserData = useCallback(async (userId) => {
     try {
       const docRef = doc(db, "users", userId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        // Return all fields from Firestore document
         return {
           ...docSnap.data(),
           lastFetched: new Date().toISOString()
@@ -39,19 +39,16 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Enhanced updateUserData function
+  // Update or create user data
   const updateUserData = useCallback(async (userId) => {
     if (!userId) return;
     
     try {
-      // Get auth user
       const authUser = auth.currentUser;
-      // Get Firestore data
       const firestoreData = await getUserData(userId);
       
       if (!firestoreData) {
         console.warn("Creating new user document for:", userId);
-        // Initialize new user document if it doesn't exist
         const initialUserData = {
           uid: userId,
           email: authUser?.email || "",
@@ -59,29 +56,41 @@ export function AuthProvider({ children }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           role: "user",
-          username: "",
-          // Add any other default fields you need
+          
+          labdetails: {
+              reference: ""
+          },
+      
+          personal: {
+              dob: "",
+              email: "",
+              name: "",
+              phone: ""
+          },
+      
+          professional: {
+              department: "CSE",
+              designation: "",
+              empId: ""
+          }
         };
         
         await setDoc(doc(db, "users", userId), initialUserData);
         setUser(initialUserData);
+        setRole(initialUserData.role);
         return;
       }
 
-      // Merge auth and Firestore data
       const mergedUserData = {
         ...firestoreData,
         uid: userId,
         email: authUser?.email || firestoreData.email || "",
         emailVerified: authUser?.emailVerified || false,
         lastLogin: new Date().toISOString(),
-        // Add any other fields you want to sync from auth
       };
 
-      // Update the user document with latest auth data
       await setDoc(doc(db, "users", userId), mergedUserData, { merge: true });
       
-      // Update local state
       setUser(mergedUserData);
       setRole(mergedUserData.role);
     } catch (error) {
@@ -89,7 +98,7 @@ export function AuthProvider({ children }) {
     }
   }, [getUserData]);
 
-  // Setup auth state listener
+  // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       setLoading(true);
@@ -127,44 +136,20 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      setUser(null);
+      setIsAuthenticated(false);
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message };
     }
   };
 
-  const register = async (email, password, username, role = "user") => {
-    try {
-      const response = await createUserWithEmailAndPassword(auth, email, password);
-      const userData = {
-        username,
-        role,
-        email,
-        uid: response.user.uid,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        emailVerified: response.user.emailVerified,
-        // Add any other initial user fields you need
-      };
-      
-      await setDoc(doc(db, "users", response.user.uid), userData);
-      setUser(userData);
-      setIsAuthenticated(true);
-      setRole(userData.role);
-      return { success: true, data: userData };
-    } catch (e) {
-      let msg = e.message;
-      if (msg.includes("(auth/invalid-email)")) msg = "Invalid Email";
-      if (msg.includes("(auth/weak-password)")) msg = "Weak Password";
-      if (msg.includes("(auth/email-already-in-use)")) msg = "Email already in use";
-      return { success: false, msg };
-    }
-  };
+  
+  
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      register, 
       login, 
       logout, 
       loading, 

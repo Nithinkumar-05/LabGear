@@ -7,14 +7,6 @@ export default function TabsLayout() {
   const { user } = useAuth();
 
   if (!user) return null; // Ensure user data is loaded
-  if(user.role !== "admin"){
-    if(user.role === "user"){
-      return <Redirect href="/(user)/" />;
-     } else if(user.role === "stock_manager"){
-      return <Redirect href="/(stockmanager)/" />;
-     }
-  }
-  
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
       <Tabs initialRouteName="home">

@@ -155,11 +155,13 @@ const Equipment = () => {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 10}
             >
                 <View className="flex-1 px-4 py-6">
-                    <Text className="text-3xl font-bold text-gray-800 mb-6">
+                    <Text className="text-3xl font-bold text-gray-800">
                         Equipment
                     </Text>
-
-                    <View className="flex-row items-center">
+                    <Text className="text-sm text-gray-500 mt-1">
+                        Manage and monitor lab equipments
+                    </Text>
+                    <View className="mt-4 flex-row items-center">
                         <Search
                             placeholder={"Search equipment..."}
                             searchQuery={searchQuery}
