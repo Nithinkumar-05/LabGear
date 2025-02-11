@@ -1,7 +1,23 @@
-import React, { useRef, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Animated } from "react-native";
-import { useAuth } from "@/routes/AuthContext";
-import { Avatar, Text, Button, Surface, Divider } from "react-native-paper";
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+
+const ProfileSection = ({ iconName, title, value }) => (
+  <View className="flex-row items-center px-4 py-3">
+    <View className="w-8 h-8 justify-center items-center">
+      <MaterialIcons name={iconName} size={24} color="#374151" />
+    </View>
+    <View className="flex-1 ml-3">
+      <Text className="text-sm text-gray-500">{title}</Text>
+      <Text className="text-base text-gray-800 mt-1">{value}</Text>
+    </View>
+  </View>
+);
+
+const SectionTitle = ({ title }) => (
+  <Text className="px-4 py-2 text-sm font-medium text-gray-500 bg-gray-50">
+    {title}
+  </Text>
+);
 
 export default function Profile() {
 
