@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
+import errorMessage from "../utils/ErrorMessages";
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../routes/AuthContext";
 import { ActivityIndicator } from "react-native-paper";
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { Ionicons } from "@expo/vector-icons";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
@@ -15,7 +17,6 @@ const SignIn = () => {
 
   const emailRef = useRef();
   const passwordRef = useRef();
-
   // Navigate to the appropriate dashboard based on the user's role
   const navigateToRoleDashboard = (userRole) => {
     switch (userRole) {
@@ -54,7 +55,7 @@ const SignIn = () => {
     try {
       const response = await login(emailRef.current, passwordRef.current);
       if (!response.success) {
-        setError(response.msg);
+        setError(errorMessage(response.msg));
         setLoading(false);
         return;
       }
@@ -107,13 +108,13 @@ const SignIn = () => {
               <Text className="text-lg font-semibold ml-2 mb-2">Password</Text>
               <View className="border border-gray-300 rounded-lg flex-row items-center mb-4 p-2">
                 <TextInput
-                  className="flex-1 text-base p-4"
+                  className="flex-1 text-base p-2"
                   placeholder="Enter your password"
                   onChangeText={(text) => (passwordRef.current = text)}
                   secureTextEntry={!passwordVisible}
                 />
-                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} className="p-2">
-                  <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="gray" />
+                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} >
+                  <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={22} color="gray" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -123,7 +124,7 @@ const SignIn = () => {
               disabled={loading}
               className={`p-4 rounded-lg items-center mb-6 ${loading ? "bg-gray-400" : "bg-black"}`}
             >
-              {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-white font-semibold text-base rounded-3xl">Login →</Text>}
+              {loading ? <ActivityIndicator size="small" color="#fff" /> : <View className={"justify-center flex-row"}><Text className="text-white font-semibold text-base rounded-3xl">Login</Text><AntDesign name="arrowright" size={22} color="white" className={"ml-2"} /></View>}
             </TouchableOpacity>
           </View>
         </View>

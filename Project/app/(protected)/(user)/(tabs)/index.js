@@ -14,8 +14,6 @@ const Home = () => {
     const [requests, setRequests] = useState([]);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
-    const [showRequestDetails, setShowRequestDetails] = useState(false);
-    const [selectedRequest, setSelectedRequest] = useState(null);
 
     const router = useRouter();
 
@@ -55,9 +53,7 @@ const Home = () => {
     };
 
     const handleRequestPress = (request) => {
-        // setSelectedRequest(request);
-        // setShowRequestDetails(true);
-        // console.log(request);
+
         router.push({
             pathname: "/(user)/requestsummary",
             params: { requestId: request.id }
@@ -297,14 +293,6 @@ const Home = () => {
                     </View>
                 </View>
             </Modal>
-            {/* <RequestDetailsModal
-                visible={showRequestDetails}
-                request={selectedRequest}
-                onClose={() => {
-                    setShowRequestDetails(false);
-                    setSelectedRequest(null);
-                }}
-            /> */}
         </View>
     );
 };

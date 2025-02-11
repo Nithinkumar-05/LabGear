@@ -6,10 +6,8 @@ export default function NotificationsScreen() {
     return (
 
 
-        <ScrollView className="flex-1 bg-gray-50">
+        <ScrollView className="flex-1 bg-white">
             <View className="p-6">
-                {/* <Text className="text-2xl font-bold text-gray-800 mb-6">Notifications</Text> */}
-
                 <View>
                     <View style={styles.container}>
                         <MaterialIcons name="" size={80} color="#aaa" />
@@ -26,8 +24,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
+        alignItems: "center"
     },
     header: {
         fontSize: 22,

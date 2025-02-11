@@ -1,11 +1,13 @@
 import { View, Text, Platform, TouchableWithoutFeedback, Keyboard, TouchableOpacity, Image, Alert } from 'react-native';
 import { Searchbar } from 'react-native-paper';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { useState, useEffect, useMemo } from 'react';
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter } from 'expo-router';
 import { componentsRef } from '@/firebaseConfig';
 import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
+import Search from '../../../../components/SearchBar';
 
 const Equipment = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -56,9 +58,9 @@ const Equipment = () => {
 
     const searchEquipment = (items, searchTerm) => {
         if (!searchTerm) return items;
-        
+
         const searchTermLower = searchTerm.toLowerCase().trim();
-        
+
         return items.filter(item => {
             const searchableFields = [
                 item.name,
@@ -66,8 +68,8 @@ const Equipment = () => {
                 item.quantity.toString(),
                 item.lowStockAlert.toString()
             ];
-            
-            return searchableFields.some(field => 
+
+            return searchableFields.some(field =>
                 field.toLowerCase().includes(searchTermLower)
             );
         });
@@ -82,45 +84,44 @@ const Equipment = () => {
     }, [equipment, searchQuery]);
 
     const EquipmentCard = ({ item }) => (
-        <TouchableOpacity 
+        <TouchableOpacity
             onPress={() => setSelectedItem(selectedItem?.id === item.id ? null : item)}
             className="bg-white rounded-xl p-4 mb-4 shadow-md"
             activeOpacity={0.7}
         >
             <View className="flex-row justify-between">
-                    <View className="flex-row flex-1">
-                        <Image
-                            source={{ uri: item.imageUrl }}
-                            className="w-20 h-20 rounded-lg"
-                            resizeMode="cover"
-                        />
-                        <View className="ml-4 flex-1">
-                            <Text className="text-lg font-semibold text-gray-800">{item.name}</Text>
-                            <View className="flex-row mt-2">
-                                <Text className="text-gray-600">Quantity: </Text>
-                                <Text className={`font-medium ${
-                                    item.quantity <= item.lowStockAlert ? 'text-red-500' : 'text-green-500'
+                <View className="flex-row flex-1">
+                    <Image
+                        source={{ uri: item.imageUrl }}
+                        className="w-20 h-20 rounded-lg"
+                        resizeMode="cover"
+                    />
+                    <View className="ml-4 flex-1">
+                        <Text className="text-lg font-semibold text-gray-800">{item.name}</Text>
+                        <View className="flex-row mt-2">
+                            <Text className="text-gray-600">Quantity: </Text>
+                            <Text className={`font-medium ${item.quantity <= item.lowStockAlert ? 'text-red-500' : 'text-green-500'
                                 }`}>
-                                    {item.quantity}
-                                </Text>
-                            </View>
-                            {item.quantity <= item.lowStockAlert && (
-                                <Text className="text-red-500 text-sm mt-1">
-                                    Low stock alert: {item.lowStockAlert}
-                                </Text>
-                            )}
+                                {item.quantity}
+                            </Text>
                         </View>
+                        {item.quantity <= item.lowStockAlert && (
+                            <Text className="text-red-500 text-sm mt-1">
+                                Low stock alert: {item.lowStockAlert}
+                            </Text>
+                        )}
+                    </View>
                 </View>
-                
-                
-                    <TouchableOpacity 
-                        onPress={() => handleDelete(item.id, item.name)}
-                        className="justify-center px-2"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                        <MaterialIcons name="delete" size={24} color="#EF4444" />
-                    </TouchableOpacity>
-                
+
+
+                <TouchableOpacity
+                    onPress={() => handleDelete(item.id, item.name)}
+                    className="justify-center px-2"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    <MaterialIcons name="delete" size={24} color="#EF4444" />
+                </TouchableOpacity>
+
             </View>
         </TouchableOpacity>
     );
@@ -150,49 +151,43 @@ const Equipment = () => {
             setSelectedItem(null);
         }}>
             <KeyboardAwareScrollView
-                className="flex-1 bg-gray-50"
+                className="flex-1 bg-gray-100"
                 keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 10}
             >
                 <View className="flex-1 px-4 py-6">
                     <Text className="text-3xl font-bold text-gray-800 mb-6">
                         Equipment
                     </Text>
-                    
-                    <View className="flex-row items-center gap-3">
-                        <View className="flex-1 shadow-lg">
-                            <Searchbar
-                                placeholder="Search equipment..."
-                                rippleColor={'#3b82f6'}
-                                onChangeText={setSearchQuery}
-                                value={searchQuery}
-                                style={{ backgroundColor: 'white', shadowColor: '#000' }}
-                                inputStyle={{ color: '#1f2937' }}
-                                iconColor="#3b82f6"
-                                className="rounded-xl"
-                            />
-                        </View>
-                        
+
+                    <View className="flex-row items-center">
+                        <Search
+                            placeholder={"Search equipment..."}
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            height={hp(6)}
+                            width={wp(80)}
+                        />
                         <TouchableOpacity
-                            className="bg-blue-500 w-12 h-12 rounded-full shadow-lg items-center justify-center active:bg-blue-600"
+                            className="bg-blue-500 w-12 h-12 rounded-full shadow-lg items-center justify-center right-12 bottom-2 active:bg-blue-600"
                             onPress={() => router.push('/(admin)/add-equipment')}
                         >
                             <Text className="text-white text-2xl font-semibold">+</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {(filteredEquipment.nonConsumables.length === 0 && 
-                      filteredEquipment.consumables.length === 0 && 
-                      searchQuery) ? (
+                    {(filteredEquipment.nonConsumables.length === 0 &&
+                        filteredEquipment.consumables.length === 0 &&
+                        searchQuery) ? (
                         <NoResults />
                     ) : (
                         <>
-                            <EquipmentSection 
-                                title="Non-Consumable Equipment" 
-                                items={filteredEquipment.nonConsumables} 
+                            <EquipmentSection
+                                title="Non-Consumable Equipment"
+                                items={filteredEquipment.nonConsumables}
                             />
-                            <EquipmentSection 
-                                title="Consumable Equipment" 
-                                items={filteredEquipment.consumables} 
+                            <EquipmentSection
+                                title="Consumable Equipment"
+                                items={filteredEquipment.consumables}
                             />
                         </>
                     )}

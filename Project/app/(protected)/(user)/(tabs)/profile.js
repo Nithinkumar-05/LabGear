@@ -1,78 +1,124 @@
-import React, { useRef, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Animated } from "react-native";
-import { useAuth } from "@/routes/AuthContext";
-import { Avatar, Text, Button, Surface, Divider } from "react-native-paper";
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+
+const ProfileSection = ({ iconName, title, value }) => (
+  <View className="flex-row items-center px-4 py-3">
+    <View className="w-8 h-8 justify-center items-center">
+      <MaterialIcons name={iconName} size={24} color="#374151" />
+    </View>
+    <View className="flex-1 ml-3">
+      <Text className="text-sm text-gray-500">{title}</Text>
+      <Text className="text-base text-gray-800 mt-1">{value}</Text>
+    </View>
+  </View>
+);
+
+const SectionTitle = ({ title }) => (
+  <Text className="px-4 py-2 text-sm font-medium text-gray-500 bg-gray-50">
+    {title}
+  </Text>
+);
 
 export default function Profile() {
-  const { user } = useAuth(); // Get user details
 
-  const spinAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 2000, // Adjust speed
-        useNativeDriver: true,
-      })
-    );
-    animation.start();
-
-    return () => animation.stop(); // Stop animation when unmounted
-  }, []);
-
-  // Convert spinAnim value to rotation
-  const spin = spinAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const userData = {
+    personal: {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      phone: "+1 (555) 123-4567",
+      dateOfBirth: "15 Jan 1990",
+    },
+    professional: {
+      empId: "EMP123456",
+      designation: "Senior Research Assistant",
+      department: "Biotechnology",
+      joinDate: "01 Mar 2023",
+    },
+    labDetails: {
+      labName: "Molecular Biology Lab",
+      location: "Building B, Floor 3, Room 304",
+    }
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <ScrollView contentContainerStyle={{ padding: 20, alignItems: "center" }}>
-
-        {/* Profile Card */}
-        <Surface className="p-6 rounded-xl bg-white shadow-lg items-center w-full">
-          {/* Rotating Avatar Border */}
-          <Animated.View
-            className="border-4 border-blue-500 rounded-full p-1 shadow-md"
-            style={{ transform: [{ rotateZ: spin }] }}
-          >
-            <Avatar.Image
-              size={160}
-              source={{ uri: user?.photoURL || "https://via.placeholder.com/350" }}
-            />
-          </Animated.View>
-
-          {/* User Info */}
-          <Text className="text-xl font-semibold mt-3">{user?.username || "John Doe"}</Text>
-          <Text className="text-gray-500">{user?.email || "johndoe@example.com"}</Text>
-        </Surface>
-
-        {/* Personal Details */}
-        <View className="mt-8 w-full">
-          <Text className="text-lg font-semibold text-gray-700">Personal Details</Text>
-          <Divider className="my-2" />
-
-          {/* Buttons */}
-          <Button
-            mode="contained"
-            theme={{ colors: { primary: "#3b82f6" } }}
-            className="mt-4 w-full"
-          >
-            Edit Profile
-          </Button>
-
-          <Button
-            mode="outlined"
-            theme={{ colors: { primary: "#3b82f6" } }}
-            className="mt-2 w-full"
-          >
-            Logout
-          </Button>
+    <ScrollView className="flex-1 bg-white">
+      {/* Profile Header */}
+      <View className="bg-gray-50 py-6 items-center">
+        <View className="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden">
+          <Image
+            source={{ uri: 'https://via.placeholder.com/96' }}
+            className="w-full h-full"
+          />
         </View>
+        <Text className="text-xl font-bold text-gray-900">{userData.personal.name}</Text>
+        <Text className="text-base text-gray-600 mt-1">{userData.professional.designation}</Text>
 
-      </ScrollView>
-    </SafeAreaView>
+        <TouchableOpacity
+          className="mt-4 flex-row items-center bg-white px-4 py-2 rounded-full shadow-sm"
+          onPress={() => navigation.navigate('EditProfile')}
+        >
+          <MaterialIcons name="edit" size={20} color="#4B5563" />
+          <Text className="ml-2 text-gray-700">Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Personal Information */}
+      <SectionTitle title="PERSONAL DETAILS" />
+      <ProfileSection
+        iconName="email"
+        title="Email"
+        value={userData.personal.email}
+      />
+      <ProfileSection
+        iconName="phone"
+        title="Phone"
+        value={userData.personal.phone}
+      />
+      <ProfileSection
+        iconName="cake"
+        title="Date of Birth"
+        value={userData.personal.dateOfBirth}
+      />
+
+      {/* Professional Information */}
+      <SectionTitle title="PROFESSIONAL DETAILS" />
+      <ProfileSection
+        iconName="badge"
+        title="Employee ID"
+        value={userData.professional.empId}
+      />
+      <ProfileSection
+        iconName="work"
+        title="Designation"
+        value={userData.professional.designation}
+      />
+      <ProfileSection
+        iconName="business"
+        title="Department"
+        value={userData.professional.department}
+      />
+      <ProfileSection
+        iconName="event"
+        title="Join Date"
+        value={userData.professional.joinDate}
+      />
+
+      {/* Lab Details */}
+      <SectionTitle title="LAB DETAILS" />
+      <ProfileSection
+        iconName="science"
+        title="Lab Name"
+        value={userData.labDetails.labName}
+      />
+      <ProfileSection
+        iconName="location-on"
+        title="Location"
+        value={userData.labDetails.location}
+      />
+
+
+
+      <View className="h-8" /> {/* Bottom spacing */}
+    </ScrollView>
   );
 }
