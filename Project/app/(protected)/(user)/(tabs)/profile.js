@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView, View, Image, TouchableOpacity } from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from "@/routes/AuthContext";
 import { useRouter } from "expo-router";
-
+import CustomBanner from "@/components/Banner";
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
   <View className="px-4 py-2 bg-gray-50">
@@ -27,6 +27,12 @@ export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
 
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    const isProfileIncomplete = Object.values(user).some(value => !value);
+    setShowBanner(isProfileIncomplete);
+  }, [user]);
   if (!user) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -37,6 +43,8 @@ export default function Profile() {
 
   return (
     <ScrollView className="flex-1 bg-white">
+      {/**Banner */}
+      {showBanner && (<CustomBanner text={"Please complete your profile"} />)}
       {/* Profile Header */}
       <View className="bg-gray-50 py-6 items-center">
         <View className="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden">

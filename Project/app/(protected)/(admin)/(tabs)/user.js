@@ -43,6 +43,7 @@ const Users = () => {
                 })
             );
             setUsers(userList);
+            // console.log(userList);
         } catch (error) {
             console.error('Error fetching users:', error);
         }
