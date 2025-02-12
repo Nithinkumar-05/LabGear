@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
 import errorMessage from "../utils/ErrorMessages";
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, Platform, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../routes/AuthContext";
 import { ActivityIndicator } from "react-native-paper";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Ionicons } from "@expo/vector-icons";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const SignIn = () => {
   const { login, isAuthenticated, role } = useAuth();
@@ -17,31 +18,30 @@ const SignIn = () => {
 
   const emailRef = useRef();
   const passwordRef = useRef();
+
   // Navigate to the appropriate dashboard based on the user's role
   const navigateToRoleDashboard = (userRole) => {
     switch (userRole) {
       case "admin":
-        router.replace("/(protected)/(admin)");
+        router.replace("/(protected)/(admin)/");
         break;
       case "stock_manager":
-        router.replace("/(protected)/(stockmanager)");
+        router.replace("/(protected)/(stockmanager)/");
         break;
       case "user":
-        router.replace("/(protected)/(user)");
+        router.replace("/(protected)/(user)/");
         break;
       default:
         router.replace("/(protected)/home");
     }
   };
 
-  // Check if the user is already authenticated on component mount
   useEffect(() => {
     if (isAuthenticated) {
       navigateToRoleDashboard(role);
     }
   }, [isAuthenticated, role]);
 
-  // Handle the sign-in process
   const signIn = async () => {
     setLoading(true);
     setError(null);
@@ -68,7 +68,6 @@ const SignIn = () => {
     }
   };
 
-  // If the user is already authenticated, show a loading indicator
   if (isAuthenticated) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -78,21 +77,27 @@ const SignIn = () => {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : undefined}
+    <KeyboardAwareScrollView
+      className="flex-1 bg-white"
+      enableOnAndroid={true}
+      enableAutomaticScroll={true}
+      keyboardShouldPersistTaps="handled"
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-        <View className="flex-1 bg-white justify-center items-center px-6 shadow-3xl">
-          <View className="relative mb-6 right-10">
-            <Image source={require("../assets/images/lab_gear.jpg")} style={{ width: hp(40), height: hp(20) }} className="right-2" />
-          </View>
+      <View className="min-h-screen justify-center items-center px-6 py-10">
+        <View className="items-center mb-6 right-12">
+          <Image 
+            source={require("../assets/images/lab_gear.jpg")} 
+            style={{ width: hp(45), height: hp(20) }} 
+            className="rounded-lg"
+          />
+        </View>
 
-          <View className="w-full border border-gray-300 rounded-3xl p-6 shadow-black shadow-3xl mb-6">
-            <Text className="text-2xl font-semibold mb-4 text-center">Sign In</Text>
-            {error && <Text className="text-red-500 text-center mb-4">{error}</Text>}
+        <View className="w-full border border-gray-300 rounded-3xl p-6 shadow-lg bg-white mb-6">
+          <Text className="text-2xl font-semibold mb-4 text-center">Sign In</Text>
+          {error && <Text className="text-red-500 text-center mb-4">{error}</Text>}
 
+          <View className="space-y-4">
             <View>
               <Text className="text-lg font-semibold ml-2 mb-2">Email</Text>
               <TextInput
@@ -100,20 +105,23 @@ const SignIn = () => {
                 onChangeText={(text) => (emailRef.current = text)}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                className="border border-gray-300 rounded-lg p-4 text-base mb-4"
+                className="border border-gray-300 rounded-lg p-4 text-base"
               />
             </View>
 
             <View>
               <Text className="text-lg font-semibold ml-2 mb-2">Password</Text>
-              <View className="border border-gray-300 rounded-lg flex-row items-center mb-4 p-2">
+              <View className="border border-gray-300 rounded-lg flex-row items-center p-2">
                 <TextInput
                   className="flex-1 text-base p-2"
                   placeholder="Enter your password"
                   onChangeText={(text) => (passwordRef.current = text)}
                   secureTextEntry={!passwordVisible}
                 />
-                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} >
+                <TouchableOpacity 
+                  onPress={() => setPasswordVisible(!passwordVisible)}
+                  className="px-2"
+                >
                   <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={22} color="gray" />
                 </TouchableOpacity>
               </View>
@@ -122,14 +130,21 @@ const SignIn = () => {
             <TouchableOpacity
               onPress={signIn}
               disabled={loading}
-              className={`p-4 rounded-lg items-center mb-6 ${loading ? "bg-gray-400" : "bg-black"}`}
+              className={`p-4 rounded-lg items-center mt-4 ${loading ? "bg-gray-400" : "bg-black"}`}
             >
-              {loading ? <ActivityIndicator size="small" color="#fff" /> : <View className={"justify-center flex-row"}><Text className="text-white font-semibold text-base rounded-3xl">Login</Text><AntDesign name="arrowright" size={22} color="white" className={"ml-2"} /></View>}
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <View className="flex-row items-center justify-center space-x-2">
+                  <Text className="text-white font-semibold text-base">Login</Text>
+                  <AntDesign name="arrowright" size={22} color="white" />
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
 

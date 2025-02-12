@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { componentsRef } from '@/firebaseConfig';
 import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
-import Search from '../../../../components/SearchBar';
+import Search from '@/components/SearchBar';
 
 const Equipment = () => {
     const [searchQuery, setSearchQuery] = useState('');

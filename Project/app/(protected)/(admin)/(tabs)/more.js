@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '@/routes/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 const MenuItem = ({ iconName, title, onPress, showBorder = true }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -23,10 +24,21 @@ const SectionTitle = ({ title }) => (
 
 export default function More() {
   const { logout } = useAuth();
-  const appVersion = "1.0.0"; // Replace with your actual app version
+  const appVersion = "1.0.0";
   const router = useRouter();
+
   const navigateToScreen = (screenName) => {
     router.push(screenName);
+  };
+
+  const handleLogOut = async () => {
+    try {
+      await logout();
+     
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally handle logout error here
+    }
   };
 
   return (
@@ -75,7 +87,7 @@ export default function More() {
 
       <View className="mt-4 mb-8 px-4">
         <TouchableOpacity
-          onPress={logout}
+          onPress={handleLogOut}
           className="bg-red-500 rounded-xl py-3 px-4"
         >
           <Text className="text-white text-center font-medium">Logout</Text>
