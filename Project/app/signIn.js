@@ -97,7 +97,7 @@ const SignIn = () => {
           <Text className="text-2xl font-semibold mb-4 text-center">Sign In</Text>
           {error && <Text className="text-red-500 text-center mb-4">{error}</Text>}
 
-          <View className="space-y-4">
+          <View className="gap-2">
             <View>
               <Text className="text-lg font-semibold ml-2 mb-2">Email</Text>
               <TextInput
