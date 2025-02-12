@@ -1,45 +1,66 @@
-import React, { useRef, useEffect } from "react";
-import { SafeAreaView, ScrollView, View, Animated } from "react-native";
+import React from "react";
+import { ScrollView, View, Image, TouchableOpacity } from "react-native";
+import { Text } from "react-native-paper";
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from "@/routes/AuthContext";
-import { Avatar, Text, Button, Surface, Divider } from "react-native-paper";
+import { useRouter } from "expo-router";
+
+// Helper component for section titles
+const SectionTitle = ({ title }) => (
+  <View className="px-4 py-2 bg-gray-50">
+    <Text className="text-sm font-medium text-gray-500">{title}</Text>
+  </View>
+);
+
+// Helper component for profile information sections
+const ProfileSection = ({ iconName, title, value }) => (
+  <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
+    <MaterialIcons name={iconName} size={24} color="#4B5563" />
+    <View className="ml-3">
+      <Text className="text-sm text-gray-500">{title}</Text>
+      <Text className="text-base text-gray-900">{value || "Not provided"}</Text>
+    </View>
+  </View>
+);
 
 export default function Profile() {
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const userData = {
-    personal: {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      dateOfBirth: "15 Jan 1990",
-    },
-    professional: {
-      empId: "EMP123456",
-      designation: "Senior Research Assistant",
-      department: "Biotechnology",
-      joinDate: "01 Mar 2023",
-    },
-    labDetails: {
-      labName: "Molecular Biology Lab",
-      location: "Building B, Floor 3, Room 304",
-    }
-  };
+  if (!user) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-white">
       {/* Profile Header */}
       <View className="bg-gray-50 py-6 items-center">
         <View className="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden">
-          <Image
-            source={{ uri: 'https://via.placeholder.com/96' }}
-            className="w-full h-full"
-          />
+          {user.personal?.profileImgUrl ? (
+            <Image
+              source={{ uri: user.personal.profileImgUrl }}
+              className="w-full h-full"
+            />
+          ) : (
+            <View className="w-full h-full bg-gray-300 justify-center items-center">
+              <MaterialIcons name="person" size={48} color="#9CA3AF" />
+            </View>
+          )}
         </View>
-        <Text className="text-xl font-bold text-gray-900">{userData.personal.name}</Text>
-        <Text className="text-base text-gray-600 mt-1">{userData.professional.designation}</Text>
+        <Text className="text-xl font-bold text-gray-900">
+          {user.personal?.name || "User"}
+        </Text>
+        <Text className="text-base text-gray-600 mt-1">
+          {user.professional?.designation || "Lab Member"}
+        </Text>
 
         <TouchableOpacity
           className="mt-4 flex-row items-center bg-white px-4 py-2 rounded-full shadow-sm"
-          onPress={() => navigation.navigate('EditProfile')}
+          onPress={() => router.push("/editprofile")}
         >
           <MaterialIcons name="edit" size={20} color="#4B5563" />
           <Text className="ml-2 text-gray-700">Edit Profile</Text>
@@ -51,17 +72,17 @@ export default function Profile() {
       <ProfileSection
         iconName="email"
         title="Email"
-        value={userData.personal.email}
+        value={user.personal?.email}
       />
       <ProfileSection
         iconName="phone"
         title="Phone"
-        value={userData.personal.phone}
+        value={user.personal?.phone}
       />
       <ProfileSection
         iconName="cake"
         title="Date of Birth"
-        value={userData.personal.dateOfBirth}
+        value={user.personal?.dob}
       />
 
       {/* Professional Information */}
@@ -69,38 +90,26 @@ export default function Profile() {
       <ProfileSection
         iconName="badge"
         title="Employee ID"
-        value={userData.professional.empId}
+        value={user.professional?.empId}
       />
       <ProfileSection
         iconName="work"
         title="Designation"
-        value={userData.professional.designation}
+        value={user.professional?.designation}
       />
       <ProfileSection
         iconName="business"
         title="Department"
-        value={userData.professional.department}
-      />
-      <ProfileSection
-        iconName="event"
-        title="Join Date"
-        value={userData.professional.joinDate}
+        value={user.professional?.department}
       />
 
       {/* Lab Details */}
       <SectionTitle title="LAB DETAILS" />
       <ProfileSection
         iconName="science"
-        title="Lab Name"
-        value={userData.labDetails.labName}
+        title="Lab Reference"
+        value={user.labDetails?.labs?.LAB0001 || "Not assigned"}
       />
-      <ProfileSection
-        iconName="location-on"
-        title="Location"
-        value={userData.labDetails.location}
-      />
-
-
 
       <View className="h-8" /> {/* Bottom spacing */}
     </ScrollView>

@@ -5,8 +5,8 @@ import { componentsRef, requestsRef } from '@/firebaseConfig';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { AntDesign } from '@expo/vector-icons';
 import EquipmentSection from '@/components/EquipmentSection';
-// import RequestDetailsModal from '@/components/RequestDetailsModal';
 import { useRouter } from 'expo-router';
+
 const Home = () => {
     const { user, loading } = useAuth();
     const [activeTab, setActiveTab] = useState('available');
@@ -53,14 +53,13 @@ const Home = () => {
     };
 
     const handleRequestPress = (request) => {
-
         router.push({
             pathname: "/(user)/requestsummary",
             params: { requestId: request.id }
         });
-
     };
 
+    // Cart management functions remain the same
     const addToCart = (item) => {
         const existingItem = cart.find(i => i.id === item.id);
         if (existingItem) {
@@ -98,7 +97,7 @@ const Home = () => {
         try {
             const requestData = {
                 userId: user.uid,
-                username: user.username,
+                username: user.personal.name, // Updated to use new user structure
                 equipment: cart.map(item => ({
                     equipmentId: item.id,
                     name: item.name,
@@ -121,11 +120,10 @@ const Home = () => {
     if (loading) {
         return (
             <View className="flex-1 justify-center items-center bg-gray-50">
-                <Text>Loading...</Text>
+                <ActivityIndicator size="large" color="#4F46E5" />
             </View>
         );
     }
-
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -134,22 +132,20 @@ const Home = () => {
                     <View className="flex-row justify-between items-center">
                         <View>
                             <Text className="text-2xl font-bold text-gray-900">
-                                Welcome, {user?.username}
+                                Welcome, {user?.personal?.name || 'User'} {/* Updated to use new user structure */}
                             </Text>
                             <Text className="text-sm text-gray-600 mt-1">
-                                Lab Programmer
+                                {user?.professional?.designation || 'Lab Member'} {/* Updated to use new user structure */}
                             </Text>
                         </View>
-
                     </View>
-
                 </View>
             </View>
 
+            {/* Rest of the component remains the same */}
             <View className="flex-row bg-white border-b border-gray-200">
                 <TouchableOpacity
-                    className={`flex-1 py-4 items-center ${activeTab === 'available' ? 'border-b-2 border-blue-500' : ''
-                        }`}
+                    className={`flex-1 py-4 items-center ${activeTab === 'available' ? 'border-b-2 border-blue-500' : ''}`}
                     onPress={() => setActiveTab('available')}
                 >
                     <Text className={activeTab === 'available' ? 'text-blue-500 font-medium' : 'text-gray-500'}>
@@ -157,8 +153,7 @@ const Home = () => {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    className={`flex-1 py-4 items-center ${activeTab === 'requests' ? 'border-b-2 border-blue-500' : ''
-                        }`}
+                    className={`flex-1 py-4 items-center ${activeTab === 'requests' ? 'border-b-2 border-blue-500' : ''}`}
                     onPress={() => setActiveTab('requests')}
                 >
                     <Text className={activeTab === 'requests' ? 'text-blue-500 font-medium' : 'text-gray-500'}>
@@ -198,36 +193,44 @@ const Home = () => {
                     </View>
                 ) : (
                     <View className="space-y-4">
-                        {requests.map((request) => (
-                            <TouchableOpacity
-                                key={request.id}
-                                className="bg-white p-4 rounded-lg shadow mb-2"
-                                onPress={() => handleRequestPress(request)}
-                            >
-                                <View className="space-y-2">
-                                    <View className="flex-row justify-between items-center">
-                                        <Text className="text-lg font-semibold">
-                                            Request #{request.id.slice(0, 6)}
-                                        </Text>
-                                        <View className={`px-3 py-1 rounded-full ${request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
-                                            }`}>
-                                            <Text className={`text-sm font-medium ${request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
-                                                }`}>
-                                                {request.status}
+                        {requests && requests.length > 0 ? (
+                            requests.map((request) => (
+                                <TouchableOpacity
+                                    key={request.id}
+                                    className="bg-white p-4 rounded-lg shadow mb-2"
+                                    onPress={() => handleRequestPress(request)}
+                                >
+                                    <View className="space-y-2">
+                                        <View className="flex-row justify-between items-center">
+                                            <Text className="text-lg font-semibold">
+                                                Request #{request.id.slice(0, 6)}
                                             </Text>
+                                            <View className={`px-3 py-1 rounded-full ${
+                                                request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
+                                            }`}>
+                                                <Text className={`text-sm font-medium ${
+                                                    request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
+                                                }`}>
+                                                    {request.status}
+                                                </Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                    {request.equipment.map((item, index) => (
-                                        <Text key={index} className="text-gray-600">
-                                            {item.name} - Qty: {item.quantity} ({item.type})
+                                        {request.equipment.map((item, index) => (
+                                            <Text key={index} className="text-gray-600">
+                                                {item.name} - Qty: {item.quantity} ({item.type})
+                                            </Text>
+                                        ))}
+                                        <Text className="text-sm text-gray-500">
+                                            Requested: {new Date(request.createdAt?.toDate()).toLocaleDateString()}
                                         </Text>
-                                    ))}
-                                    <Text className="text-sm text-gray-500">
-                                        Requested: {new Date(request.createdAt?.toDate()).toLocaleDateString()}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                                    </View>
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            <View className="flex-1 justify-center items-center py-4">
+                                <Text className="text-gray-500">No requests available</Text>
+                            </View>
+                        )}
                     </View>
                 )}
             </ScrollView>

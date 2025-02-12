@@ -61,7 +61,7 @@ export default function AddUser() {
       await signOut(auth);
 
       // Step 5: Re-authenticate the admin
-      await signInWithEmailAndPassword(auth, adminUser.email, "admin@123"); // Replace "admin_password" with the actual admin password
+      await signInWithEmailAndPassword(auth, adminUser.email, "admin@123"); 
       setLoading(false);
       return { success: true, data: userData };
     } catch (e) {

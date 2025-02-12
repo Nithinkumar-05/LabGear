@@ -5,7 +5,7 @@ import {
   signOut, 
   signInWithEmailAndPassword 
 } from 'firebase/auth';
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 
@@ -13,10 +13,12 @@ const auth = getAuth();
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(undefined);
-  const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState("");
+  const [authState, setAuthState] = useState({
+    user: null,
+    isAuthenticated: undefined,
+    loading: true,
+    role: ""
+  });
 
   // Fetch complete user details
   const getUserData = useCallback(async (userId) => {
@@ -29,10 +31,9 @@ export function AuthProvider({ children }) {
           ...docSnap.data(),
           lastFetched: new Date().toISOString()
         };
-      } else {
-        console.warn("No user document found for:", userId);
-        return null;
       }
+      console.warn("No user document found for:", userId);
+      return null;
     } catch (error) {
       console.error("Error fetching user data:", error);
       return null;
@@ -48,7 +49,6 @@ export function AuthProvider({ children }) {
       const firestoreData = await getUserData(userId);
       
       if (!firestoreData) {
-        console.warn("Creating new user document for:", userId);
         const initialUserData = {
           uid: userId,
           email: authUser?.email || "",
@@ -56,28 +56,28 @@ export function AuthProvider({ children }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           role: "user",
-          
           labdetails: {
-              reference: ""
+            reference: ""
           },
-      
           personal: {
-              dob: "",
-              email: "",
-              name: "",
-              phone: ""
+            dob: "",
+            email: "",
+            name: "",
+            phone: ""
           },
-      
           professional: {
-              department: "CSE",
-              designation: "",
-              empId: ""
+            department: "CSE",
+            designation: "",
+            empId: ""
           }
         };
         
         await setDoc(doc(db, "users", userId), initialUserData);
-        setUser(initialUserData);
-        setRole(initialUserData.role);
+        setAuthState(prev => ({
+          ...prev,
+          user: initialUserData,
+          role: initialUserData.role
+        }));
         return;
       }
 
@@ -91,8 +91,11 @@ export function AuthProvider({ children }) {
 
       await setDoc(doc(db, "users", userId), mergedUserData, { merge: true });
       
-      setUser(mergedUserData);
-      setRole(mergedUserData.role);
+      setAuthState(prev => ({
+        ...prev,
+        user: mergedUserData,
+        role: mergedUserData.role
+      }));
     } catch (error) {
       console.error("Error updating user data:", error);
     }
@@ -100,29 +103,39 @@ export function AuthProvider({ children }) {
 
   // Auth state listener
   useEffect(() => {
+    setAuthState(prev => ({ ...prev, loading: true }));
+    
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      setLoading(true);
       try {
         if (authUser) {
           await updateUserData(authUser.uid);
-          setIsAuthenticated(true);
+          setAuthState(prev => ({
+            ...prev,
+            isAuthenticated: true,
+            loading: false
+          }));
         } else {
-          setUser(null);
-          setIsAuthenticated(false);
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            loading: false,
+            role: ""
+          });
         }
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        setAuthState(prev => ({ ...prev, loading: false }));
       }
     });
 
     return unsubscribe;
   }, [updateUserData]);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
       await updateUserData(response.user.uid);
-      setIsAuthenticated(true);
+      setAuthState(prev => ({ ...prev, isAuthenticated: true }));
       return { success: true, data: response.user };
     } catch (e) {
       let msg = e.message;
@@ -131,31 +144,36 @@ export function AuthProvider({ children }) {
       if (msg.includes("(auth/wrong-password)")) msg = "Invalid password";
       return { success: false, msg };
     }
-  };
+  }, [updateUserData]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut(auth);
-      setUser(null);
-      setIsAuthenticated(false);
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        loading: false,
+        role: ""
+      });
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message };
     }
-  };
+  }, []);
 
-  
-  
+  const refreshUserData = useCallback(() => {
+    return updateUserData(authState.user?.uid);
+  }, [updateUserData, authState.user?.uid]);
+
+  const contextValue = useMemo(() => ({
+    ...authState,
+    login,
+    logout,
+    refreshUserData
+  }), [authState, login, logout, refreshUserData]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      loading, 
-      isAuthenticated,
-      refreshUserData: () => updateUserData(user?.uid)
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

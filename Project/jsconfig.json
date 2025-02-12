@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+      "allowJs": true,
+      "checkJs": false,
+      "jsx": "react",
+      "module": "commonjs",
+      "target": "es2017",
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "allowSyntheticDefaultImports": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "noEmit": true
+    },
+    "include": ["app/**/*"],
+    "exclude": [
+      "node_modules",
+      "babel.config.js",
+      "metro.config.js",
+      ".expo",
+      "dist"
+    ]
+  }
