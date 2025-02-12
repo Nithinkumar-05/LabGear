@@ -12,25 +12,33 @@ const AdminLayout = () => {
       />
       <Stack.Screen
         name="add-equipment"
-        options={{ 
-          presentation: "modal", 
-          title: "Add Equipment" 
+        options={{
+          presentation: "modal",
+          title: "Add Equipment"
         }}
       />
       <Stack.Screen
         name="notifications"
-        options={{ 
-          presentation: "fullScreenModal", 
-          title: "Notifications" 
+        options={{
+          presentation: "fullScreenModal",
+          title: "Notifications"
         }}
       />
       <Stack.Screen
         name="userDetails"
         options={{
-          title:"User Details",
+          title: "User Details",
           presentation: "card",
         }}
       />
+      <Stack.Screen
+        name="add-user"
+        options={{
+          title: "Add User",
+          presentation: "fullScreenModal",
+        }}
+      />
+
     </Stack>
   );
 };

@@ -6,7 +6,7 @@ import { db } from '@/firebaseConfig';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import Avatar from '@/components/AvatarGenerator';
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -78,7 +78,7 @@ const Users = () => {
     }
 
     return (
-        <ScrollView 
+        <ScrollView
             className="flex-1 bg-gray-100"
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -101,11 +101,11 @@ const Users = () => {
                         width={wp(80)}
                     />
                     <TouchableOpacity
-                            className="bg-blue-500 w-12 h-12 rounded-full shadow-lg items-center justify-center right-12 bottom-2 active:bg-blue-600"
-                            onPress={() => router.push('/(admin)/add-user')}
-                        >
-                            <Text className="text-white text-2xl font-semibold">+</Text>
-                        </TouchableOpacity>
+                        className="bg-blue-500 w-12 h-12 rounded-full shadow-lg items-center justify-center right-12 bottom-2 active:bg-blue-600"
+                        onPress={() => router.push('/(admin)/add-user')}
+                    >
+                        <Text className="text-white text-2xl font-semibold">+</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -121,22 +121,23 @@ const Users = () => {
                                 activeOpacity={0.7}
                             >
                                 <View className="p-4 flex-row items-center space-x-4 gap-3">
-                                    <Image
-                                        source={{
-                                            uri: user.personal?.profileImgUrl ||
-                                                'https://ui-avatars.com/api/?name=' +
-                                                encodeURIComponent(user.personal?.name || '')
-                                        }}
-                                        className="w-14 h-14 rounded-full bg-gray-200"
-                                    />
+                                    {user.personal?.profileImgUrl ? (
+                                        <Image
+                                            source={{
+                                                uri: user.personal?.profileImgUrl
+                                            }}
+                                            className="w-14 h-14 rounded-full bg-gray-200"
+                                        />) : (
+                                        <Avatar name={user.personal?.name} size={50} />
+                                    )}
                                     <View className="flex-1">
                                         <View className="flex-row items-center justify-between">
                                             <Text className="text-lg font-semibold text-gray-800">
                                                 {user.personal?.name}
                                             </Text>
-                                            
+
                                         </View>
-                                        
+
                                         {user.labInfo && (
                                             <View className="flex-row items-center mt-2">
                                                 <Ionicons name="flask-outline" size={14} color="#6b7280" />
