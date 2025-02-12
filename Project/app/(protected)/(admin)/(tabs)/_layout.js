@@ -9,11 +9,11 @@ export default function TabsLayout() {
   if (!user) return null; // Ensure user data is loaded
   if(user.role!=='admin'){
     if(user.role==='stock_manager')
-      <Redirect href={'/(manager)/'}/>
+      return <Redirect href={'/(protected)/(stockmanager)/'}/>
     else if(user.role==='user')
-      <Redirect href={'/(user)/'}/>
+      return <Redirect href={'/(protected)/(user)/'}/>
     else
-      <Redirect href={"/signIn"}/>
+      return <Redirect href={"/signIn"}/>
   }
   return (
     <ProtectedRoute allowedRoles={["admin"]}>

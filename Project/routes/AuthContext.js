@@ -8,17 +8,17 @@ import {
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
+import { useRouter } from 'expo-router';
 
 const auth = getAuth();
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [authState, setAuthState] = useState({
-    user: null,
-    isAuthenticated: undefined,
-    loading: true,
-    role: ""
-  });
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(undefined);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Fetch complete user details
   const getUserData = useCallback(async (userId) => {
@@ -56,9 +56,7 @@ export function AuthProvider({ children }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           role: "user",
-          labdetails: {
-            reference: ""
-          },
+          labdetails: "", // Keeping as reference
           personal: {
             dob: "",
             email: "",
@@ -73,11 +71,8 @@ export function AuthProvider({ children }) {
         };
         
         await setDoc(doc(db, "users", userId), initialUserData);
-        setAuthState(prev => ({
-          ...prev,
-          user: initialUserData,
-          role: initialUserData.role
-        }));
+        setUser(initialUserData);
+        setRole(initialUserData.role);
         return;
       }
 
@@ -91,11 +86,8 @@ export function AuthProvider({ children }) {
 
       await setDoc(doc(db, "users", userId), mergedUserData, { merge: true });
       
-      setAuthState(prev => ({
-        ...prev,
-        user: mergedUserData,
-        role: mergedUserData.role
-      }));
+      setUser(mergedUserData);
+      setRole(mergedUserData.role);
     } catch (error) {
       console.error("Error updating user data:", error);
     }
@@ -103,39 +95,35 @@ export function AuthProvider({ children }) {
 
   // Auth state listener
   useEffect(() => {
-    setAuthState(prev => ({ ...prev, loading: true }));
+    setLoading(true);
     
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       try {
         if (authUser) {
           await updateUserData(authUser.uid);
-          setAuthState(prev => ({
-            ...prev,
-            isAuthenticated: true,
-            loading: false
-          }));
+          setIsAuthenticated(true);
+          setLoading(false);
+          router.push(authUser.role === "admin" ? "/admin-dashboard" : "/user-dashboard");
         } else {
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-            role: ""
-          });
+          setUser(null);
+          setRole("");
+          setIsAuthenticated(false);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Auth state change error:", error);
-        setAuthState(prev => ({ ...prev, loading: false }));
+        setLoading(false);
       }
     });
 
     return unsubscribe;
-  }, [updateUserData]);
+  }, [updateUserData, router]);
 
   const login = useCallback(async (email, password) => {
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
       await updateUserData(response.user.uid);
-      setAuthState(prev => ({ ...prev, isAuthenticated: true }));
+      setIsAuthenticated(true);
       return { success: true, data: response.user };
     } catch (e) {
       let msg = e.message;
@@ -144,33 +132,33 @@ export function AuthProvider({ children }) {
       if (msg.includes("(auth/wrong-password)")) msg = "Invalid password";
       return { success: false, msg };
     }
-  }, [updateUserData]);
+  }, [updateUserData, router]);
 
   const logout = useCallback(async () => {
     try {
       await signOut(auth);
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        role: ""
-      });
+      setUser(null);
+      setRole("");
+      setIsAuthenticated(false);
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message };
     }
-  }, []);
+  }, [router]);
 
   const refreshUserData = useCallback(() => {
-    return updateUserData(authState.user?.uid);
-  }, [updateUserData, authState.user?.uid]);
+    return updateUserData(user?.uid);
+  }, [updateUserData, user?.uid]);
 
   const contextValue = useMemo(() => ({
-    ...authState,
+    user,
+    role,
+    isAuthenticated,
+    loading,
     login,
     logout,
     refreshUserData
-  }), [authState, login, logout, refreshUserData]);
+  }), [user, role, isAuthenticated, loading, login, logout, refreshUserData]);
 
   return (
     <AuthContext.Provider value={contextValue}>

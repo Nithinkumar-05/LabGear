@@ -1,14 +1,11 @@
 // _layout.js
 import { Stack } from 'expo-router';
-import { useAuth } from '../../routes/AuthContext';
-import ProtectedRoute from '../../utils/ProtectedRoute';
 
 const Layout = () => {
   return (
     <Stack>
       {/* Public route */}
-
-
+      
 
       <Stack.Screen
         name="(admin)"

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity,ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, where, getDoc } from 'firebase/firestore';
 import Search from '@/components/SearchBar';
@@ -7,6 +7,7 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Avatar from '@/components/AvatarGenerator';
+import {Image} from 'expo-image'
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -111,14 +112,14 @@ const Users = () => {
             </View>
 
             {/* Users List */}
-            <View className="px-4 py-4">
+            <View className="px-2 py-2">
                 {filteredUsers.length > 0 ? (
                     <View className="space-y-3">
                         {filteredUsers.map(user => (
                             <TouchableOpacity
                                 key={user.id}
                                 onPress={() => navigateToUserDetails(user)}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-2"
                                 activeOpacity={0.7}
                             >
                                 <View className="p-4 flex-row items-center space-x-4 gap-3">
