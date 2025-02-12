@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from "@/routes/AuthContext";
 import { useRouter } from "expo-router";
 import CustomBanner from "@/components/Banner";
+import Avatar from "@/components/AvatarGenerator";
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
   <View className="px-4 py-2 bg-gray-50">
@@ -47,16 +48,14 @@ export default function Profile() {
       {showBanner && (<CustomBanner text={"Please complete your profile"} />)}
       {/* Profile Header */}
       <View className="bg-gray-50 py-6 items-center">
-        <View className="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden">
+        <View className="w-24 h-24 rounded-full items-center justify-center bg-gray-200 mb-3 overflow-hidden">
           {user.personal?.profileImgUrl ? (
             <Image
               source={{ uri: user.personal.profileImgUrl }}
               className="w-full h-full"
             />
           ) : (
-            <View className="w-full h-full bg-gray-300 justify-center items-center">
-              <MaterialIcons name="person" size={48} color="#9CA3AF" />
-            </View>
+            <Avatar name={user.personal?.name || "User"} size={96} fontSize={35} />
           )}
         </View>
         <Text className="text-xl font-bold text-gray-900">
@@ -68,7 +67,7 @@ export default function Profile() {
 
         <TouchableOpacity
           className="mt-4 flex-row items-center bg-white px-4 py-2 rounded-full shadow-sm"
-          onPress={() => router.push("/editprofile")}
+          onPress={() => router.push("(user)/editprofile")}
         >
           <MaterialIcons name="edit" size={20} color="#4B5563" />
           <Text className="ml-2 text-gray-700">Edit Profile</Text>

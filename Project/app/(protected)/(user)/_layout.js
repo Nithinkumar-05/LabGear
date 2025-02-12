@@ -19,6 +19,10 @@ const _layout = () => {
         name="requestsummary"
         options={{ presentation: "fullScreenModal", title: "RequestSummary", animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="editprofile"
+        options={{ presentation: "fullScreenModal", title: "Edit Profile", animation: "slide_from_right" }}
+      />
     </Stack>
   );
 };
