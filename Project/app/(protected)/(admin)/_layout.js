@@ -38,7 +38,13 @@ const AdminLayout = () => {
           presentation: "fullScreenModal",
         }}
       />
-
+      <Stack.Screen
+        name="requests"
+        options={{
+          title: "Requests",
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 };
