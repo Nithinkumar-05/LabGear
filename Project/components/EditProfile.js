@@ -43,8 +43,8 @@ export default function EditProfile() {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images','livePhotos'],
-      aspect: [1,1],
+      mediaTypes: ['images', 'livePhotos'],
+      aspect: [1, 1],
       quality: 1,
     });
 
@@ -55,25 +55,17 @@ export default function EditProfile() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.personal.name || !formData.personal.email || !formData.personal.phone || !formData.personal.dob || !formData.professional.department || !formData.professional.designation || !formData.professional.empId || !image) {
-      alert("Please fill all fields and upload an image!");
-      return;
-    }
-
     setUploading(true);
-    // Simulate image upload
-    setTimeout(() => {
-      setUploading(false);
-      console.log('Form Data:', formData);
-      // Add your submission logic here
-      alert("User added successfully!");
-    }, 2000);
+
+    // Perform API request here
+    console.log(formData);
+
+    setUploading(false);
   };
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">
-        <Text className="text-2xl font-bold text-gray-800 mb-6 text-center">Add User</Text>
 
         {/* Image Upload Section */}
         <View className="items-center mb-6">
@@ -97,49 +89,49 @@ export default function EditProfile() {
         {/* Personal Information */}
         <View className="mb-6">
           <Text className="text-lg font-semibold text-gray-700 mb-4">Personal Information</Text>
-          
+
           <View className="space-y-4">
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Full Name</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Full Name</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter full name"
                 value={formData.personal.name}
                 onChangeText={(value) => handleInputChange('personal', 'name', value)}
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter email id"
                 value={formData.personal.email}
                 onChangeText={(value) => handleInputChange('personal', 'email', value)}
                 keyboardType="email-address"
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Phone Number</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Phone Number</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter phone number"
                 value={formData.personal.phone}
                 onChangeText={(value) => handleInputChange('personal', 'phone', value)}
                 keyboardType="phone-pad"
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Date of Birth</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Date of Birth</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter Date of Birth (DD/MM/YYYY)"
                 value={formData.personal.dob}
                 onChangeText={(value) => handleInputChange('personal', 'dob', value)}
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
           </View>
         </View>
@@ -147,37 +139,37 @@ export default function EditProfile() {
         {/* Professional Information */}
         <View className="mb-6">
           <Text className="text-lg font-semibold text-gray-700 mb-4">Professional Information</Text>
-          
+
           <View className="space-y-4">
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Department</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Department</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter department"
                 value={formData.professional.department}
                 onChangeText={(value) => handleInputChange('professional', 'department', value)}
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Designation</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Designation</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter designation"
                 value={formData.professional.designation}
                 onChangeText={(value) => handleInputChange('professional', 'designation', value)}
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
             <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Employee Id</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Employee Id</Text>
 
-                <TextInput
+              <TextInput
                 placeholder="Enter employee id"
                 value={formData.professional.empId}
                 onChangeText={(value) => handleInputChange('professional', 'empId', value)}
                 className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
+              />
             </View>
           </View>
         </View>
@@ -201,7 +193,7 @@ export default function EditProfile() {
           disabled={uploading}
         >
           <Text className="text-white text-center text-lg font-semibold">
-            {uploading ? "Uploading..." : "Add User"}
+            {uploading ? "Updating" : "Update"}
           </Text>
         </TouchableOpacity>
       </View>

@@ -6,6 +6,7 @@ import { useAuth } from "@/routes/AuthContext";
 import { useRouter } from "expo-router";
 import CustomBanner from "@/components/Banner";
 import Avatar from "@/components/AvatarGenerator";
+
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
   <View className="px-4 py-2 bg-gray-50">
@@ -34,6 +35,7 @@ export default function Profile() {
     const isProfileIncomplete = Object.values(user).some(value => !value);
     setShowBanner(isProfileIncomplete);
   }, [user]);
+
   if (!user) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -44,8 +46,9 @@ export default function Profile() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      {/**Banner */}
+      {/** Banner */}
       {showBanner && (<CustomBanner text={"Please complete your profile"} />)}
+
       {/* Profile Header */}
       <View className="bg-gray-50 py-6 items-center">
         <View className="w-24 h-24 rounded-full items-center justify-center bg-gray-200 mb-3 overflow-hidden">
@@ -79,17 +82,17 @@ export default function Profile() {
       <ProfileSection
         iconName="email"
         title="Email"
-        value={user.personal?.email}
+        value={user.personal?.email ? String(user.personal.email) : "Not provided"}
       />
       <ProfileSection
         iconName="phone"
         title="Phone"
-        value={user.personal?.phone}
+        value={user.personal?.phone ? String(user.personal.phone) : "Not provided"}
       />
       <ProfileSection
         iconName="cake"
         title="Date of Birth"
-        value={user.personal?.dob}
+        value={user.personal?.dob ? String(user.personal.dob) : "Not provided"}
       />
 
       {/* Professional Information */}
@@ -97,25 +100,25 @@ export default function Profile() {
       <ProfileSection
         iconName="badge"
         title="Employee ID"
-        value={user.professional?.empId}
+        value={user.professional?.empId ? String(user.professional.empId) : "Not provided"}
       />
       <ProfileSection
         iconName="work"
         title="Designation"
-        value={user.professional?.designation}
+        value={user.professional?.designation ? String(user.professional.designation) : "Not provided"}
       />
       <ProfileSection
         iconName="business"
         title="Department"
-        value={user.professional?.department}
+        value={user.professional?.department ? String(user.professional.department) : "CSE"}
       />
 
       {/* Lab Details */}
       <SectionTitle title="LAB DETAILS" />
       <ProfileSection
-        iconName="science"
-        title="Lab Reference"
-        value={user.labDetails?.labs?.LAB0001 || "Not assigned"}
+        iconName="computer"
+        title="Lab Details"
+        value={user.labDetails?.labs?.LAB0001 ? String(user.labDetails.labs.LAB0001) : "Not assigned"}
       />
 
       <View className="h-8" /> {/* Bottom spacing */}

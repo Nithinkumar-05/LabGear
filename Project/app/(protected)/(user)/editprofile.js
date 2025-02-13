@@ -1,11 +1,10 @@
 import React from 'react';
-
+import EditProfile from '@/components/EditProfile';
 import { View, Text } from 'react-native';
 
-export default function EditProfile() {
+export default function EditProfilePage() {
     return (
-        <View className="flex-1 justify-center items-center">
-            <Text>EditProfile</Text>
-        </View>
+
+        <EditProfile />
     )
 }
