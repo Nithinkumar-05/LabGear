@@ -24,13 +24,11 @@ export default function AddUser() {
 
   const registerUser = async (email, password, username) => {
     try {
-      // Step 1: Save the admin's current email and password
       const adminUser = auth.currentUser;
       if (!adminUser || !adminUser.email) {
         throw new Error("Admin not authenticated");
       }
 
-      // Step 2: Create the new user
       const response = await createUserWithEmailAndPassword(auth, email, password);
       const userData = {
         uid: response.user.uid,
@@ -54,13 +52,10 @@ export default function AddUser() {
         },
       };
       setLoading(true);
-      // Step 3: Store user data in Firestore
       await setDoc(doc(usersRef, response.user.uid), userData);
 
-      // Step 4: Sign out the new user
       await signOut(auth);
 
-      // Step 5: Re-authenticate the admin
       await signInWithEmailAndPassword(auth, adminUser.email, "admin@123"); 
       setLoading(false);
       return { success: true, data: userData };

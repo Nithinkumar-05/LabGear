@@ -1,210 +1,281 @@
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Button } from 'react-native-paper';
+import { collection, updateDoc, serverTimestamp, doc, getDoc,firestore } from 'firebase/firestore';
+import { labsRef, usersRef } from '@/firebaseConfig';
+import { useState, useEffect } from 'react';
+import { Picker } from '@react-native-picker/picker';
+import useLabDetails from '@/utils/LabDetails';
+import { useAuth } from '@/routes/AuthContext';
 
-export default function EditProfile() {
+const EditProfile = () => {
+  const { labs, loading, error, refreshLabs } = useLabDetails();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     personal: {
-      name: '',
-      email: '',
-      phone: '',
-      dob: '',
+      name: user.personal.name || '',
+      email: user.personal.email || '',
+      phone: user.personal.phone || '',
+      dob: user.personal.dob || '',
     },
     professional: {
-      department: '',
-      designation: '',
-      empId: '',
+      department: user.professional.department || 'CSE',
+      designation: user.professional.designation || '',
+      empId: user.professional.empId || '',
     },
     labdetails: {
-      labs: ['LAB0001'], // Default lab
+      labId: user.professional.labdetails || '',
     },
-    imageUrl: '', // Added image URL field
+    imageUrl: user.imageUrl || '',
   });
 
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [labName, setLabName] = useState(''); // to store the lab name
 
+  // Fetch lab details based on the labId from user
+  useEffect(() => {
+    if (formData.labdetails.labId) {
+      const fetchLabDetails = async () => {
+        const labRef = doc(labsRef, formData.labdetails.labId.split('/')[2]);
+        const labDoc = await getDoc(labRef);
+        if (labDoc.exists()) {
+          const labData = labDoc.data();
+          setLabName(labData.labname); // Set the lab name
+        }
+      };
+
+      fetchLabDetails();
+    }
+  }, [formData.labdetails.labId]);
+  
   const handleInputChange = (section, field, value) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [section]: {
         ...prev[section],
         [field]: value,
       },
     }));
+    setErrors(prev => ({
+      ...prev,
+      [`${section}.${field}`]: null,
+    }));
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Permission to access media library is required!');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant media library access to upload an image.');
+        return;
+      }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images','livePhotos'],
-      aspect: [1,1],
-      quality: 1,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images','livePhotos'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      handleInputChange('personal', 'imageUrl', result.assets[0].uri);
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+        handleInputChange('personal', 'imageUrl', result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+      console.error('Error picking image:', error);
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.personal.name.trim()) {
+      newErrors['personal.name'] = 'Name is required';
+    }
+
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  
+  
   const handleSubmit = async () => {
-    if (!formData.personal.name || !formData.personal.email || !formData.personal.phone || !formData.personal.dob || !formData.professional.department || !formData.professional.designation || !formData.professional.empId || !image) {
-      alert("Please fill all fields and upload an image!");
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please check the form for errors');
       return;
     }
-
+  
     setUploading(true);
-    // Simulate image upload
-    setTimeout(() => {
+    try {
+      // Ensure we have valid document IDs
+      if (!user?.uid) {
+        throw new Error('User not authenticated');
+      }
+      
+      if (!formData.labdetails.labId) {
+        throw new Error('No lab selected');
+      }
+  
+      // Create document references
+      const userDocRef = doc(usersRef, user.uid); // Use Firebase auth UID
+      const labDocRef = doc(labsRef, formData.labdetails.labId);
+  
+      const updateData = {
+        personal: {
+          name: formData.personal.name,
+          email: formData.personal.email,
+          phone: formData.personal.phone,
+          dob: formData.personal.dob,
+          imageUrl: formData.personal.imageUrl||"https://via.placeholder.com/150",
+        },
+        professional: {
+          department: formData.professional.department,
+          designation: formData.professional.designation,
+          empId: formData.professional.empId,
+        },
+        labdetails: {
+          labRef: labDocRef,
+          labName: labName,
+        },
+        updatedAt: serverTimestamp(),
+      };
+  
+      await updateDoc(userDocRef, updateData);
+      Alert.alert('Success', 'Profile updated successfully');
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
+      console.error('Update error:', error);
+    } finally {
       setUploading(false);
-      console.log('Form Data:', formData);
-      // Add your submission logic here
-      alert("User added successfully!");
-    }, 2000);
+    }
   };
+  
+  const renderError = (field) => {
+    return errors[field] ? (
+      <Text className="text-red-500 text-sm mt-1">{errors[field]}</Text>
+    ) : null;
+  };
+
+  const renderInput = (section, field, placeholder, keyboardType = 'default') => (
+    <View className="mb-4">
+      <Text className="text-sm font-medium text-gray-700 mb-1">
+        {placeholder}
+      </Text>
+      <TextInput
+        placeholder={`Enter ${placeholder.toLowerCase()}`}
+        value={formData[section][field]}
+        onChangeText={(value) => handleInputChange(section, field, value)}
+        keyboardType={keyboardType}
+        className={`bg-white border ${
+          errors[`${section}.${field}`] ? 'border-red-500' : 'border-gray-200'
+        } p-4 rounded-xl shadow-sm`}
+      />
+      {renderError(`${section}.${field}`)}
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text className="mt-2">Loading lab details...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center p-4">
+        <Text className="text-red-500 mb-4">Failed to load lab details</Text>
+        <TouchableOpacity 
+          onPress={refreshLabs}
+          className="bg-blue-500 px-4 py-2 rounded-xl"
+        >
+          <Text className="text-white">Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-6">
-        <Text className="text-2xl font-bold text-gray-800 mb-6 text-center">Add User</Text>
+      <View className="p-4">
+        <Text className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          Edit Profile
+        </Text>
 
         {/* Image Upload Section */}
         <View className="items-center mb-6">
           <TouchableOpacity
             onPress={pickImage}
-            className="w-48 h-48 bg-white rounded-xl shadow-black shadow-lg items-center justify-center border-2 border-dashed border-gray-300"
+            className={`w-48 h-48 bg-white rounded-xl shadow-lg items-center justify-center border-2 border-dashed ${
+              errors.image ? 'border-red-500' : 'border-gray-300'
+            }`}
           >
             {image ? (
-              <Image
-                source={{ uri: image }}
-                className="w-full h-full rounded-xl"
-              />
+              <Image source={{ uri: image }} className="w-full h-full rounded-xl" />
             ) : (
               <View className="items-center">
                 <Text className="text-gray-500 mt-2 text-sm">Tap to upload image</Text>
               </View>
             )}
           </TouchableOpacity>
+          {renderError('image')}
         </View>
 
         {/* Personal Information */}
         <View className="mb-6">
           <Text className="text-lg font-semibold text-gray-700 mb-4">Personal Information</Text>
-          
-          <View className="space-y-4">
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Full Name</Text>
-
-                <TextInput
-                placeholder="Enter full name"
-                value={formData.personal.name}
-                onChangeText={(value) => handleInputChange('personal', 'name', value)}
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-
-                <TextInput
-                placeholder="Enter email id"
-                value={formData.personal.email}
-                onChangeText={(value) => handleInputChange('personal', 'email', value)}
-                keyboardType="email-address"
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Phone Number</Text>
-
-                <TextInput
-                placeholder="Enter phone number"
-                value={formData.personal.phone}
-                onChangeText={(value) => handleInputChange('personal', 'phone', value)}
-                keyboardType="phone-pad"
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Date of Birth</Text>
-
-                <TextInput
-                placeholder="Enter Date of Birth (DD/MM/YYYY)"
-                value={formData.personal.dob}
-                onChangeText={(value) => handleInputChange('personal', 'dob', value)}
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-          </View>
+          {renderInput('personal', 'name', 'Full Name')}
+          {renderInput('personal', 'email', 'Email', 'email-address')}
+          {renderInput('personal', 'phone', 'Phone Number', 'phone-pad')}
+          {renderInput('personal', 'dob', 'Date of Birth (DD/MM/YYYY)')}
         </View>
 
         {/* Professional Information */}
         <View className="mb-6">
           <Text className="text-lg font-semibold text-gray-700 mb-4">Professional Information</Text>
-          
-          <View className="space-y-4">
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Department</Text>
-
-                <TextInput
-                placeholder="Enter department"
-                value={formData.professional.department}
-                onChangeText={(value) => handleInputChange('professional', 'department', value)}
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Designation</Text>
-
-                <TextInput
-                placeholder="Enter designation"
-                value={formData.professional.designation}
-                onChangeText={(value) => handleInputChange('professional', 'designation', value)}
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-            <View className="mb-2">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Employee Id</Text>
-
-                <TextInput
-                placeholder="Enter employee id"
-                value={formData.professional.empId}
-                onChangeText={(value) => handleInputChange('professional', 'empId', value)}
-                className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"
-                />
-            </View>
-          </View>
+          {renderInput('professional', 'department', 'Department')}
+          {renderInput('professional', 'designation', 'Designation')}
+          {renderInput('professional', 'empId', 'Employee ID')}
         </View>
 
         {/* Lab Details */}
         <View className="mb-6">
           <Text className="text-lg font-semibold text-gray-700 mb-4">Lab Details</Text>
-          <Text className="text-sm font-medium text-gray-700 mb-1">Lab Name</Text>
-          <TextInput
-            placeholder="Lab ID"
-            value={formData.labdetails.labs[0]}
-            editable={false}
-            className="bg-gray-100 border border-gray-200 p-4 rounded-xl shadow-sm"
-          />
+          <View className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <Picker
+              selectedValue={formData.labdetails.labId}
+              onValueChange={(value) => handleInputChange('labdetails', 'labId', value)}
+              style={{
+                color: errors['labdetails.labId'] ? '#ef4444' : '#374151',
+              }}
+            >
+              <Picker.Item label={labName || "Select Lab"} value="" />
+              {labs.map((lab) => (
+                <Picker.Item key={lab.id} label={`${lab.labname} (${lab.department}) - ${lab.location}`} value={lab.id} />
+              ))}
+            </Picker>
+          </View>
+          {renderError('labdetails.labId')}
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
           onPress={handleSubmit}
-          className={`p-4 rounded-xl shadow-black shadow-lg mt-4 ${uploading ? "bg-gray-400" : "bg-blue-500"}`}
           disabled={uploading}
+          className={`p-4 rounded-xl shadow-lg mt-4 ${uploading ? 'bg-gray-400' : 'bg-blue-500'}`}
         >
           <Text className="text-white text-center text-lg font-semibold">
-            {uploading ? "Uploading..." : "Add User"}
+            {uploading ? 'Saving Profile...' : 'Save Profile'}
           </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
-}
+};
+
+export default EditProfile;

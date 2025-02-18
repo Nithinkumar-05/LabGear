@@ -12,20 +12,23 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow Lab Gear to access your photos to update your profile picture.",
-        "NSCameraUsageDescription": "Allow Lab Gear to access your camera to take profile pictures."
-      }
+        "NSCameraUsageDescription": "Allow Lab Gear to access your camera to take profile pictures.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.nithineruventi.LabGear"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/lab_gear.jpg",
         "backgroundColor": "#ffffff"
       },
-      "softwareKeyboardLayoutMode":"pan",
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.nithineruventi.LabGear",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
