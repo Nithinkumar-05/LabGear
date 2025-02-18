@@ -48,7 +48,7 @@ const EditProfile = () => {
       fetchLabDetails();
     }
   }, [formData.labdetails.labId]);
-  
+
   const handleInputChange = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -109,12 +109,6 @@ const EditProfile = () => {
     }
   
     setUploading(true);
-
-    // Perform API request here
-    console.log(formData);
-
-    setUploading(false);
-  };
     try {
       // Ensure we have valid document IDs
       if (!user?.uid) {
