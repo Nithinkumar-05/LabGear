@@ -1,29 +1,35 @@
-const Cloudinary = () => {
-    const uploadImageToCloudinary = async (imageUri,UPLOAD_PRESET,CLOUD_NAME) => {
+const Cloudinary = {
+    uploadImageToCloudinary: async (imageUri, CLOUD_NAME, UPLOAD_PRESET) => {
         const data = new FormData();
-        data.append("file", {
+        const filename = imageUri.split('/').pop();
+        const fileExtension = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+        const mimeType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
+
+        data.append('file', {
             uri: imageUri,
-            type: "image/jpeg",
-            name: "upload.jpg",
+            type: mimeType,
+            name: filename || `upload.${fileExtension}`,
         });
-        data.append("upload_preset", UPLOAD_PRESET);
-        data.append("cloud_name", CLOUD_NAME);
-    
+        data.append('upload_preset', UPLOAD_PRESET);
+        data.append('cloud_name', CLOUD_NAME);
+
         try {
-            let response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                method: "POST",
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: 'POST',
                 body: data,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            let result = await response.json();
+
+            const result = await response.json();
             return result.secure_url;
         } catch (error) {
             console.error("Upload error:", error);
             return null;
         }
-    };
-    return ( {
-        uploadImageToCloudinary
-    } );
-}
+    }
+};
  
 export default Cloudinary;

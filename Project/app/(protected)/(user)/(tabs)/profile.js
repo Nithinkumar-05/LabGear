@@ -6,6 +6,8 @@ import { useAuth } from "@/routes/AuthContext";
 import { useRouter } from "expo-router";
 import CustomBanner from "@/components/Banner";
 import Avatar from "@/components/AvatarGenerator";
+import { doc, getDoc } from 'firebase/firestore';
+import { labsRef} from '@/firebaseConfig';
 
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
@@ -28,14 +30,34 @@ const ProfileSection = ({ iconName, title, value }) => (
 export default function Profile() {
   const { user } = useAuth();
   const router = useRouter();
-
+  const [lab,setLab] = useState();
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     const isProfileIncomplete = Object.values(user).some(value => !value);
     setShowBanner(isProfileIncomplete);
   }, [user]);
-
+  
+  useEffect(() => {
+      const fetchCurrentLab = async () => {
+        if (user.labDetails?._key?.path?.segments) {
+          try {
+            // Extract lab ID from the path segments
+            const labId = user.labDetails._key.path.segments[user.labDetails._key.path.segments.length - 1];
+            const labDoc = await getDoc(doc(labsRef, labId));
+            
+            if (labDoc.exists()) {
+              const labData = labDoc.data();
+              setLab({ id: labId, ...labData });
+            }
+          } catch (error) {
+            console.error('Error fetching current lab:', error);
+          }
+        }
+      };
+  
+      fetchCurrentLab();
+    }, [user.labDetails]);
   if (!user) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -43,7 +65,6 @@ export default function Profile() {
       </View>
     );
   }
-
   return (
     <ScrollView className="flex-1 bg-white">
       {/** Banner */}
@@ -118,7 +139,7 @@ export default function Profile() {
       <ProfileSection
         iconName="computer"
         title="Lab Details"
-        value={user.labDetails?.labs?.LAB0001 ? String(user.labDetails.labs.LAB0001) : "Not assigned"}
+        value={user.labDetails ? String(lab.labName) : "Not assigned"}
       />
 
       <View className="h-8" /> {/* Bottom spacing */}
