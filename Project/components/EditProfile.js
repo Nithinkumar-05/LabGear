@@ -72,9 +72,9 @@ const EditProfile = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images','livePhotos'],
+        mediaTypes: ['images', 'livePhotos'],
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: [1,  1],
         quality: 0.8,
       });
 
@@ -109,6 +109,12 @@ const EditProfile = () => {
     }
   
     setUploading(true);
+
+    // Perform API request here
+    console.log(formData);
+
+    setUploading(false);
+  };
     try {
       // Ensure we have valid document IDs
       if (!user?.uid) {

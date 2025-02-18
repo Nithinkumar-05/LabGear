@@ -135,7 +135,7 @@ const Home = () => {
                                 Welcome, {user?.personal?.name || 'User'} {/* Updated to use new user structure */}
                             </Text>
                             <Text className="text-sm text-gray-600 mt-1">
-                                {user?.professional?.designation || 'Lab Member'} {/* Updated to use new user structure */}
+                                {user?.professional?.designation || 'Lab Programmer'} {/* Updated to use new user structure */}
                             </Text>
                         </View>
                     </View>
@@ -205,12 +205,10 @@ const Home = () => {
                                             <Text className="text-lg font-semibold">
                                                 Request #{request.id.slice(0, 6)}
                                             </Text>
-                                            <View className={`px-3 py-1 rounded-full ${
-                                                request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
-                                            }`}>
-                                                <Text className={`text-sm font-medium ${
-                                                    request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
+                                            <View className={`px-3 py-1 rounded-full ${request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
                                                 }`}>
+                                                <Text className={`text-sm font-medium ${request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
+                                                    }`}>
                                                     {request.status}
                                                 </Text>
                                             </View>
