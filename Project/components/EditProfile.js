@@ -1,62 +1,81 @@
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { collection, updateDoc, serverTimestamp, doc, getDoc,firestore } from 'firebase/firestore';
+import { collection, updateDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { labsRef, usersRef } from '@/firebaseConfig';
 import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import useLabDetails from '@/utils/LabDetails';
 import { useAuth } from '@/routes/AuthContext';
-
+import { PROFILE_UPLOAD_PRESET, CLOUD_NAME } from "@env";
+import Cloudinary from '@/utils/Cloudinary';
 const EditProfile = () => {
   const { labs, loading, error, refreshLabs } = useLabDetails();
   const { user } = useAuth();
+
   const [formData, setFormData] = useState({
     personal: {
-      name: user.personal.name || '',
-      email: user.personal.email || '',
-      phone: user.personal.phone || '',
-      dob: user.personal.dob || '',
+      name: user.personal?.name || '',
+      email: user.personal?.email || '',
+      phone: user.personal?.phone || '',
+      dob: user.personal?.dob || '',
+      profileImgUrl:user.personal?.profileImgUrl || '',
     },
     professional: {
-      department: user.professional.department || 'CSE',
-      designation: user.professional.designation || '',
-      empId: user.professional.empId || '',
+      department: user.professional?.department || 'CSE',
+      designation: user.professional?.designation || '',
+      empId: user.professional?.empId || '',
     },
-    labdetails: {
-      labId: user.professional.labdetails || '',
-    },
-    imageUrl: user.imageUrl || '',
+    selectedLabId: '', // Store just the lab ID
   });
 
+  const [currentLab, setCurrentLab] = useState(null);
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [labName, setLabName] = useState(''); // to store the lab name
 
-  // Fetch lab details based on the labId from user
+  // Fetch and set initial lab details
   useEffect(() => {
-    if (formData.labdetails.labId) {
-      const fetchLabDetails = async () => {
-        const labRef = doc(labsRef, formData.labdetails.labId.split('/')[2]);
-        const labDoc = await getDoc(labRef);
-        if (labDoc.exists()) {
-          const labData = labDoc.data();
-          setLabName(labData.labname); // Set the lab name
+    const fetchCurrentLab = async () => {
+      if (user.labDetails?._key?.path?.segments) {
+        try {
+          // Extract lab ID from the path segments
+          const labId = user.labDetails._key.path.segments[user.labDetails._key.path.segments.length - 1];
+          const labDoc = await getDoc(doc(labsRef, labId));
+          
+          if (labDoc.exists()) {
+            const labData = labDoc.data();
+            setCurrentLab({ id: labId, ...labData });
+            setFormData(prev => ({
+              ...prev,
+              selectedLabId: labId
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching current lab:', error);
         }
-      };
+      }
+    };
 
-      fetchLabDetails();
-    }
-  }, [formData.labdetails.labId]);
+    fetchCurrentLab();
+  }, [user.labDetails]);
+
 
   const handleInputChange = (section, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
+    if (section === 'lab') {
+      setFormData(prev => ({
+        ...prev,
+        selectedLabId: value
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: value,
+        },
+      }));
+    }
+    
     setErrors(prev => ({
       ...prev,
       [`${section}.${field}`]: null,
@@ -72,15 +91,15 @@ const EditProfile = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images', 'livePhotos'],
+        mediaTypes: ['images','livePhotos'],
         allowsEditing: true,
-        aspect: [1,  1],
-        quality: 0.8,
+        aspect: [1, 1],
+        quality: 1.0,
       });
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
-        handleInputChange('personal', 'imageUrl', result.assets[0].uri);
+        handleInputChange('personal', 'profileImgUrl', result.assets[0].uri);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
@@ -94,14 +113,14 @@ const EditProfile = () => {
     if (!formData.personal.name.trim()) {
       newErrors['personal.name'] = 'Name is required';
     }
-
+    if (!formData.selectedLabId) {
+      newErrors['lab'] = 'Please select a lab';
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  
-  
   const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert('Validation Error', 'Please check the form for errors');
@@ -110,36 +129,26 @@ const EditProfile = () => {
   
     setUploading(true);
     try {
-      // Ensure we have valid document IDs
       if (!user?.uid) {
         throw new Error('User not authenticated');
       }
       
-      if (!formData.labdetails.labId) {
-        throw new Error('No lab selected');
+      const userDocRef = doc(usersRef, user.uid);
+      const labDocRef = doc(labsRef, formData.selectedLabId);
+
+      // Verify lab exists before updating
+      const labDoc = await getDoc(labDocRef);
+      if (!labDoc.exists()) {
+        throw new Error('Selected lab does not exist');
       }
-  
-      // Create document references
-      const userDocRef = doc(usersRef, user.uid); // Use Firebase auth UID
-      const labDocRef = doc(labsRef, formData.labdetails.labId);
-  
+      const imgURL = await Cloudinary.uploadImageToCloudinary(formData.personal.profileImgUrl,CLOUD_NAME,PROFILE_UPLOAD_PRESET);
       const updateData = {
         personal: {
-          name: formData.personal.name,
-          email: formData.personal.email,
-          phone: formData.personal.phone,
-          dob: formData.personal.dob,
-          imageUrl: formData.personal.imageUrl||"https://via.placeholder.com/150",
+          ...formData.personal,
+          profileImgUrl: imgURL || "https://via.placeholder.com/150",
         },
-        professional: {
-          department: formData.professional.department,
-          designation: formData.professional.designation,
-          empId: formData.professional.empId,
-        },
-        labdetails: {
-          labRef: labDocRef,
-          labName: labName,
-        },
+        professional: formData.professional,
+        labDetails: labDocRef, // Store as reference
         updatedAt: serverTimestamp(),
       };
   
@@ -215,8 +224,11 @@ const EditProfile = () => {
               errors.image ? 'border-red-500' : 'border-gray-300'
             }`}
           >
-            {image ? (
-              <Image source={{ uri: image }} className="w-full h-full rounded-xl" />
+            {image || formData.personal.profileImgUrl ? (
+              <Image 
+                source={{ uri: image || formData.personal.profileImgUrl }} 
+                className="w-full h-full rounded-xl" 
+              />
             ) : (
               <View className="items-center">
                 <Text className="text-gray-500 mt-2 text-sm">Tap to upload image</Text>
@@ -248,19 +260,30 @@ const EditProfile = () => {
           <Text className="text-lg font-semibold text-gray-700 mb-4">Lab Details</Text>
           <View className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <Picker
-              selectedValue={formData.labdetails.labId}
-              onValueChange={(value) => handleInputChange('labdetails', 'labId', value)}
+              selectedValue={formData.selectedLabId}
+              onValueChange={(value) => handleInputChange('lab', 'selectedLabId', value)}
               style={{
-                color: errors['labdetails.labId'] ? '#ef4444' : '#374151',
+                color: errors.lab ? '#ef4444' : '#374151',
               }}
             >
-              <Picker.Item label={labName || "Select Lab"} value="" />
+              {currentLab ? (
+                <Picker.Item 
+                  label={`Current: ${currentLab.labname} (${currentLab.department}) - ${currentLab.location}`} 
+                  value={currentLab.id} 
+                />
+              ) : (
+                <Picker.Item label="Select Lab" value="" />
+              )}
               {labs.map((lab) => (
-                <Picker.Item key={lab.id} label={`${lab.labname} (${lab.department}) - ${lab.location}`} value={lab.id} />
+                <Picker.Item 
+                  key={lab.id} 
+                  label={`${lab.labname} (${lab.department}) - ${lab.location}`} 
+                  value={lab.id} 
+                />
               ))}
             </Picker>
           </View>
-          {renderError('labdetails.labId')}
+          {renderError('lab')}
         </View>
 
         {/* Submit Button */}
