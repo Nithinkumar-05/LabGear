@@ -23,7 +23,12 @@ const _layout = () => {
         name="editprofile"
         options={{ presentation: "fullScreenModal", title: "Edit Profile", animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="notificationpreferences"
+        options={{ presentation: "fullScreenModal", title: "Notification Preferences", animation: "slide_from_right" }}
+      />
     </Stack>
+
   );
 };
 

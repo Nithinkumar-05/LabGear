@@ -1,10 +1,28 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Image, Animated } from "react-native";
 import { useRouter } from "expo-router";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// import OnBoarding from "@/components/OnBoarding";
 export default function SplashScreen() {
   const router = useRouter();
   const progress = useRef(new Animated.Value(0)).current;
+  const [onboardingStatus, setOnboardingStatus] = useState(null);
+
+
+  const checkOnBoardingStatus = async () => {
+
+    try {
+      const status = await AsyncStorage.getItem("onboardingStatus");
+
+      setOnboardingStatus(status);
+      // console.log(onboardingStatus)
+      router.replace("/onboarding")
+
+    }
+    catch (error) {
+      console.error("Error getting onboarding status:", error);
+    }
+  }
 
   useEffect(() => {
     // Animate the progress bar over 3 seconds
@@ -13,7 +31,9 @@ export default function SplashScreen() {
       duration: 3000,
       useNativeDriver: false,
     }).start(() => {
-      router.replace("/signIn"); // Navigate to login screen
+      // Check if onboarding has been completed
+      checkOnBoardingStatus();
+      router.replace("/signIn");
     });
   }, []);
 

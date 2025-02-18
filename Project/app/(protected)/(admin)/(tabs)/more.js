@@ -28,13 +28,15 @@ export default function More() {
   const router = useRouter();
 
   const navigateToScreen = (screenName) => {
-    router.push(screenName);
+    router.push({
+      pathname: `/(admin)/${screenName}`
+    });
   };
 
   const handleLogOut = async () => {
     try {
       await logout();
-     
+
     } catch (error) {
       console.error("Logout failed:", error);
       // Optionally handle logout error here
@@ -67,7 +69,7 @@ export default function More() {
       <MenuItem
         iconName="notifications-none"
         title="Notifications"
-        onPress={() => navigateToScreen('Notifications')}
+        onPress={() => navigateToScreen('notificationpreferences')}
       />
 
       <SectionTitle title="SUPPORT" />

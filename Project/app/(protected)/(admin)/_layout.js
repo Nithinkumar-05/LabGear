@@ -45,6 +45,13 @@ const AdminLayout = () => {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="notificationpreferences"
+        options={{
+          title: "Notification Preferences",
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 };

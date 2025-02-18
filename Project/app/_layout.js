@@ -33,8 +33,14 @@ const MainLayout = () => {
         <Stack.Screen
           name="index"
           options={{
-            headerShown:false
-          }}/>
+            headerShown: false
+          }} />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            headerShown: false
+          }}
+        />
         <Stack.Screen
           name="signIn"
           options={{
@@ -50,8 +56,8 @@ const MainLayout = () => {
         <Stack.Screen
           name="[...missing]"
           options={{
-            title:"404 Error"
-          }}/>
+            title: "404 Error"
+          }} />
       </Stack>
       {/* <Slot/> */}
     </View>
