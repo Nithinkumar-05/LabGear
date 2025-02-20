@@ -1,9 +1,9 @@
-import { 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  getAuth, 
-  signOut, 
-  signInWithEmailAndPassword 
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  getAuth,
+  signOut,
+  signInWithEmailAndPassword
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { setDoc, doc, getDoc } from 'firebase/firestore';
@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
     try {
       const docRef = doc(db, "users", userId);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         return {
           ...docSnap.data(),
@@ -44,11 +44,11 @@ export function AuthProvider({ children }) {
   // Update or create user data
   const updateUserData = useCallback(async (userId) => {
     if (!userId) return;
-    
+
     try {
       const authUser = auth.currentUser;
       const firestoreData = await getUserData(userId);
-      
+
       if (!firestoreData) {
         const initialUserData = {
           uid: userId,
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
             empId: ""
           }
         };
-        
+
         await setDoc(doc(db, "users", userId), initialUserData);
         setUser(initialUserData);
         setRole(initialUserData.role);
@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
       };
 
       await setDoc(doc(db, "users", userId), mergedUserData, { merge: true });
-      
+
       setUser(mergedUserData);
       setRole(mergedUserData.role);
     } catch (error) {
@@ -100,7 +100,7 @@ export function AuthProvider({ children }) {
   // Auth state listener
   useEffect(() => {
     setLoading(true);
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       try {
         if (authUser) {
@@ -156,13 +156,14 @@ export function AuthProvider({ children }) {
 
   const contextValue = useMemo(() => ({
     user,
+    setUser,
     role,
     isAuthenticated,
     loading,
     login,
     logout,
     refreshUserData
-  }), [user, role, isAuthenticated, loading, login, logout, refreshUserData]);
+  }), [user, role, isAuthenticated, loading, login, logout, refreshUserData, setUser]);
 
   return (
     <AuthContext.Provider value={contextValue}>

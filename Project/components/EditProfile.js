@@ -10,7 +10,7 @@ import { PROFILE_UPLOAD_PRESET, CLOUD_NAME } from "@env";
 import Cloudinary from '@/utils/Cloudinary';
 const EditProfile = () => {
   const { labs, loading, error, refreshLabs } = useLabDetails();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState({
     personal: {
@@ -18,17 +18,17 @@ const EditProfile = () => {
       email: user.personal?.email || '',
       phone: user.personal?.phone || '',
       dob: user.personal?.dob || '',
-      profileImgUrl:user.personal?.profileImgUrl || '',
+      profileImgUrl: user.personal?.profileImgUrl || '',
     },
     professional: {
       department: user.professional?.department || 'CSE',
       designation: user.professional?.designation || '',
       empId: user.professional?.empId || '',
     },
-    selectedLabId: '', // Store just the lab ID
+    selectedLabId: user.labDetails.labId || '', // Store just the lab ID
   });
 
-  const [currentLab, setCurrentLab] = useState(null);
+  const [currentLab, setCurrentLab] = useState(formData.selectedLabId || null);
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -41,7 +41,7 @@ const EditProfile = () => {
           // Extract lab ID from the path segments
           const labId = user.labDetails._key.path.segments[user.labDetails._key.path.segments.length - 1];
           const labDoc = await getDoc(doc(labsRef, labId));
-          
+
           if (labDoc.exists()) {
             const labData = labDoc.data();
             setCurrentLab({ id: labId, ...labData });
@@ -75,7 +75,7 @@ const EditProfile = () => {
         },
       }));
     }
-    
+
     setErrors(prev => ({
       ...prev,
       [`${section}.${field}`]: null,
@@ -91,7 +91,7 @@ const EditProfile = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images','livePhotos'],
+        mediaTypes: ['images', 'livePhotos'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1.0,
@@ -116,7 +116,7 @@ const EditProfile = () => {
     if (!formData.selectedLabId) {
       newErrors['lab'] = 'Please select a lab';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,13 +126,13 @@ const EditProfile = () => {
       Alert.alert('Validation Error', 'Please check the form for errors');
       return;
     }
-  
+
     setUploading(true);
     try {
       if (!user?.uid) {
         throw new Error('User not authenticated');
       }
-      
+
       const userDocRef = doc(usersRef, user.uid);
       const labDocRef = doc(labsRef, formData.selectedLabId);
 
@@ -141,7 +141,7 @@ const EditProfile = () => {
       if (!labDoc.exists()) {
         throw new Error('Selected lab does not exist');
       }
-      const imgURL = await Cloudinary.uploadImageToCloudinary(formData.personal.profileImgUrl,CLOUD_NAME,PROFILE_UPLOAD_PRESET);
+      const imgURL = await Cloudinary.uploadImageToCloudinary(formData.personal.profileImgUrl, CLOUD_NAME, PROFILE_UPLOAD_PRESET);
       const updateData = {
         personal: {
           ...formData.personal,
@@ -149,13 +149,17 @@ const EditProfile = () => {
         },
         professional: formData.professional,
         labDetails: {
-          labId:formData.selectedLabId,
+          labId: formData.selectedLabId,
           labRef: labDocRef,
         },
         updatedAt: serverTimestamp(),
       };
-  
+
       await updateDoc(userDocRef, updateData);
+      setUser(prev => ({
+        ...prev,
+        ...updateData,
+      }));
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to update profile');
@@ -164,7 +168,7 @@ const EditProfile = () => {
       setUploading(false);
     }
   };
-  
+
   const renderError = (field) => {
     return errors[field] ? (
       <Text className="text-red-500 text-sm mt-1">{errors[field]}</Text>
@@ -181,9 +185,8 @@ const EditProfile = () => {
         value={formData[section][field]}
         onChangeText={(value) => handleInputChange(section, field, value)}
         keyboardType={keyboardType}
-        className={`bg-white border ${
-          errors[`${section}.${field}`] ? 'border-red-500' : 'border-gray-200'
-        } p-4 rounded-xl shadow-sm`}
+        className={`bg-white border ${errors[`${section}.${field}`] ? 'border-red-500' : 'border-gray-200'
+          } p-4 rounded-xl shadow-sm`}
       />
       {renderError(`${section}.${field}`)}
     </View>
@@ -202,7 +205,7 @@ const EditProfile = () => {
     return (
       <View className="flex-1 justify-center items-center p-4">
         <Text className="text-red-500 mb-4">Failed to load lab details</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={refreshLabs}
           className="bg-blue-500 px-4 py-2 rounded-xl"
         >
@@ -223,14 +226,13 @@ const EditProfile = () => {
         <View className="items-center mb-6">
           <TouchableOpacity
             onPress={pickImage}
-            className={`w-48 h-48 bg-white rounded-xl shadow-lg items-center justify-center border-2 border-dashed ${
-              errors.image ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-48 h-48 bg-white rounded-xl shadow-lg items-center justify-center border-2 border-dashed ${errors.image ? 'border-red-500' : 'border-gray-300'
+              }`}
           >
             {image || formData.personal.profileImgUrl ? (
-              <Image 
-                source={{ uri: image || formData.personal.profileImgUrl }} 
-                className="w-full h-full rounded-xl" 
+              <Image
+                source={{ uri: image || formData.personal.profileImgUrl }}
+                className="w-full h-full rounded-xl"
               />
             ) : (
               <View className="items-center">
@@ -270,18 +272,18 @@ const EditProfile = () => {
               }}
             >
               {currentLab ? (
-                <Picker.Item 
-                  label={`Current: ${currentLab.labName} (${currentLab.department}) - ${currentLab.location}`} 
-                  value={currentLab.id} 
+                <Picker.Item
+                  label={`Current: ${currentLab.labName} (${currentLab.department}) - ${currentLab.location}`}
+                  value={currentLab.id}
                 />
               ) : (
                 <Picker.Item label="Select Lab" value="" />
               )}
               {labs.map((lab) => (
-                <Picker.Item 
-                  key={lab.id} 
-                  label={`${lab.labName} (${lab.department}) - ${lab.location}`} 
-                  value={lab.id} 
+                <Picker.Item
+                  key={lab.id}
+                  label={`${lab.labName} (${lab.department}) - ${lab.location}`}
+                  value={lab.id}
                 />
               ))}
             </Picker>
