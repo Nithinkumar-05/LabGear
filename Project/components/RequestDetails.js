@@ -5,8 +5,6 @@ import { labsRef } from "@/firebaseConfig";
 const RequestDetails = ({ request }) => {
     const [labDetails, setLabDetails] = useState(null);
 
-    
-
     return (
         <View className="flex-1 bg-white min-h-full">
 
@@ -31,13 +29,19 @@ const RequestDetails = ({ request }) => {
                 <View className="mb-4">
                     <Text className="text-lg font-semibold mb-2">{`${request?.equipment.length} item(s) in this request`}</Text>
                     {request?.equipment.map((item, index) => (
-                        <View key={index} className="bg-gray-100 p-3 rounded-lg mb-2">
-                            {/* <Image src=""></Image> */}
-                            <Text className="font-medium">{item.name}</Text>
-                            <View className="flex-row justify-between mt-1">
-                                <Text className="text-gray-600">Type: {item.type}</Text>
-                                <Text className="text-gray-600">Quantity: {item.quantity}</Text>
+                        <View key={index} className="flex-1 flex-row justify-center items-center bg-gray-100 p-3 rounded-lg mb-2">
+                            <Image 
+                                source={{ uri: item.img }}
+                                style={{ width: 64, height: 64, borderRadius: 8, backgroundColor: "#ddd" }}
+                            />
+                            <View className="ml-4">
+                                <Text className="font-medium">{item.name}</Text>
+                                <View className="flex-row justify-between mt-1">
+                                    <Text className="text-gray-600">Type: {item.type}</Text>
+                                    <Text className="text-gray-600">Quantity: {item.quantity}</Text>
+                                </View>
                             </View>
+                            
                         </View>
                     ))}
                 </View>

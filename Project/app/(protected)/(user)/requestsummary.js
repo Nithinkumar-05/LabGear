@@ -10,7 +10,6 @@ export default function RequestSummary() {
 
     const [request, setRequest] = useState(null);
     const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         const fetchRequest = async () => {
             if (!requestId) return;

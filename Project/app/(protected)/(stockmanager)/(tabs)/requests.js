@@ -1,117 +1,200 @@
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
-import useRequestDetails from '@/utils/RequestDetails';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
+import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
+import { db } from '@/firebaseConfig';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+
 const Requests = () => {
-    const { requests, loading, error } = useRequestDetails();
-    const router = useRouter();
-    if (loading) return (
-        <View className="flex-1 justify-center items-center bg-gray-50">
-            <ActivityIndicator size="large" color="#4F46E5" />
-        </View>
-    );
-    
-    if (error) return (
-        <View className="flex-1 justify-center items-center bg-gray-50 p-4">
-            <Text className="text-red-500 text-lg font-medium text-center">{error}</Text>
-        </View>
-    );
-    
-    const getStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'approved': return 'text-green-600';
-            case 'pending': return 'text-amber-500';
-            case 'rejected': return 'text-red-500';
-            default: return 'text-gray-600';
-        }
-    };
-    
-    const getStatusBgColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'approved': return 'bg-green-100';
-            case 'pending': return 'bg-amber-100';
-            case 'rejected': return 'bg-red-100';
-            default: return 'bg-gray-100';
-        }
-    };
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState('pending');
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const handleRequestDetails = (item) => {
-        // Navigate to request details screen
-        router.push({
-            pathname: "/(stockmanager)/requestsummary",
-            params: { requestId: item.id }
+  useEffect(() => {
+    fetchRequests(activeTab);
+  }, [activeTab]);
+
+  const fetchRequests = async (status) => {
+    try {
+      setLoading(true);
+      
+      const requestsRef = collection(db, 'Requests');
+      const q = query(
+        requestsRef,
+        where('status', '==', status),
+        // orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const requestsList = [];
+      
+      querySnapshot.forEach((doc) => {
+        requestsList.push({
+          id: doc.id,
+          ...doc.data()
         });
+      });
+      
+      setRequests(requestsList);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <View className="flex-1 bg-gray-50">
-            <View className=" py-4 shadow-sm">
-                <Text className="text-2xl font-bold text-center text-gray-800">Requests</Text>
-            </View>
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const renderTabButton = (tab, label, icon) => (
+    <TouchableOpacity
+      onPress={() => handleTabChange(tab)}
+      className={`flex-1 py-3 flex-row justify-center items-center ${
+        activeTab === tab ? 'border-b-2 border-indigo-600' : 'border-b border-gray-200'
+      }`}
+    >
+      {icon}
+      <Text className={`ml-2 font-medium ${
+        activeTab === tab ? 'text-indigo-600' : 'text-gray-600'
+      }`}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderEmptyState = () => (
+    <View className="flex-1 justify-center items-center py-10">
+      <MaterialIcons name="inbox" size={56} color="#D1D5DB" />
+      <Text className="mt-4 text-gray-500 text-lg font-medium">
+        No {activeTab} requests found
+      </Text>
+    </View>
+  );
+
+  const renderRequestItem = ({ item }) => (
+    <TouchableOpacity
+      onPress= {() => router.push({
+        pathname: "/(stockmanager)/requestsummary",
+        params: { requestId: item.id },
+      })}
+      className="bg-white mb-3 rounded-xl overflow-hidden shadow-sm"
+    >
             
-            {requests.length > 0 ? (
-                <FlatList
-                    className="px-4 pt-4 bg-white"
-                    data={requests}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <View className="mb-4 rounded-xl overflow-hidden border  bg-white shadow-sm">
-                            <View className="bg-indigo-50 p-4 border-b border-gray-200">
-                                <View className="flex-row justify-between items-center">
-                                    <Text className="text-lg font-semibold text-gray-800">
-                                        Request #{item.id.slice(0, 6)}
-                                    </Text>
-                                    <View className={`px-3 py-1 rounded-full ${getStatusBgColor(item.status)}`}>
-                                        <Text className={`text-sm font-medium ${getStatusColor(item.status)}`}>
-                                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                        </Text>
-                                    </View>
-                                </View>
-                                <Text className="text-gray-600 mt-1">Lab ID: {item.labId}</Text>
-                                <Text className="text-gray-600">Requested by: {item.username.trim()}</Text>
-                            </View>
-                            
-                            <View className="p-4">
-                                <Text className="font-semibold text-gray-700 mb-2">Equipment</Text>
-                                {item.equipment.map((eq, idx) => (
-                                    <View
-                                        key={`${eq.equipmentId}-${idx}`}
-                                        className={`flex-row justify-between items-center py-3 ${
-                                            idx < item.equipment.length - 1 ? 'border-b border-gray-100' : ''
-                                        }`}
-                                    >
-                                        <View className="flex-1">
-                                            {
-                                                eq.img?<Image source={{uri: eq.img}} style={{width: 50, height: 50, borderRadius: 10}} />:null
-                                            }
-                                            <Text className="text-gray-800 font-medium">{eq.name.trim()}</Text>
-                                            <Text className="text-gray-500 text-xs">{eq.type}</Text>
-                                        </View>
-                                        <View className="bg-gray-100 px-2 py-1 rounded-md">
-                                            <Text className="text-gray-700">Qty: {eq.quantity}</Text>
-                                        </View>
-                                    </View>
-                                ))}
-                            </View>
-                            
-                            <TouchableOpacity 
-                                className="bg-gray-100 p-3 flex-row justify-center items-center"
-                                onPress={()=>handleRequestDetails(item)}
-                            >
-                                <Text className="text-indigo-600 font-medium mr-2">View Details</Text>
-                                <AntDesign name="arrowright" size={16} color="#4F46E5" />
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                />
-            ) : (
-                <View className="flex-1 justify-center items-center p-4">
-                    <AntDesign name="inbox" size={48} color="#9CA3AF" />
-                    <Text className="text-gray-500 text-lg mt-4 text-center">No requests found</Text>
-                </View>
-            )}
+      <View className="p-4">
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-gray-800 font-semibold">
+            Request #{item.id.slice(0, 6)}
+          </Text>
+          <View className={`px-2 py-1 rounded-full ${
+            activeTab === 'approved' ? 'bg-green-100' :
+            activeTab === 'pending' ? 'bg-amber-100' : 'bg-red-100'
+          }`}>
+            <Text className={`text-xs font-medium ${
+              activeTab === 'approved' ? 'text-green-600' :
+              activeTab === 'pending' ? 'text-amber-500' : 'text-red-500'
+            }`}>
+              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </Text>
+          </View>
         </View>
-    );
+        
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-gray-600 text-sm">Requested by:</Text>
+          <Text className="text-gray-800 text-sm font-medium">{item.username}</Text>
+        </View>
+        
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-gray-600 text-sm">Lab ID:</Text>
+          <Text className="text-gray-800 text-sm font-medium">{item.labId}</Text>
+        </View>
+        
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-gray-600 text-sm">Date:</Text>
+          <Text className="text-gray-800 text-sm font-medium">
+            {new Date(item.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
+        
+        <Text className="text-gray-600 text-sm mb-2">Items:</Text>
+        <View className="bg-gray-50 p-2 rounded-md">
+          {item.equipment.slice(0, 2).map((equip, idx) => (
+            <Text key={idx} className="text-gray-700 text-sm">
+              • {equip.name} (x{equip.quantity})
+            </Text>
+          ))}
+          {item.equipment.length > 2 && (
+            <Text className="text-gray-500 text-sm italic">
+              +{item.equipment.length - 2} more items
+            </Text>
+          )}
+        </View>
+        
+        {activeTab === 'rejected' && item.rejectionReason && (
+          <View className="mt-2 bg-red-50 p-2 rounded-md">
+            <Text className="text-red-600 text-sm">
+              Reason: {item.rejectionReason.length > 50 
+                ? item.rejectionReason.substring(0, 50) + '...' 
+                : item.rejectionReason}
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      <View className="bg-gray-50 py-2 px-4 flex-row justify-between items-center">
+        <Text className="text-gray-500 text-xs">
+          {activeTab === 'approved' 
+            ? `Approved ${new Date(item.approvedAt).toLocaleDateString()}` 
+            : activeTab === 'rejected'
+              ? `Rejected ${new Date(item.rejectedAt).toLocaleDateString()}`
+              : 'Awaiting review'}
+        </Text>
+        <View className="flex-row items-center">
+          <Text className="text-indigo-600 text-sm mr-1">View Details</Text>
+          <AntDesign name="right" size={12} color="#4F46E5" />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View className="flex-1 bg-gray-100">
+      <View className="bg-white py-4 px-4 shadow-sm">
+        <Text className="text-xl font-bold text-gray-800">Inventory Requests</Text>
+      </View>
+      
+      {/* Tabs */}
+      <View className="flex-row bg-white">
+        {renderTabButton('pending', 'Pending', 
+          <MaterialIcons name="pending-actions" size={18} color={activeTab === 'pending' ? '#4F46E5' : '#6B7280'} />
+        )}
+        {renderTabButton('approved', 'Approved', 
+          <MaterialIcons name="check-circle" size={18} color={activeTab === 'approved' ? '#4F46E5' : '#6B7280'} />
+        )}
+        {renderTabButton('rejected', 'Rejected', 
+          <MaterialIcons name="cancel" size={18} color={activeTab === 'rejected' ? '#4F46E5' : '#6B7280'} />
+        )}
+      </View>
+      
+      {/* Content */}
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#4F46E5" />
+          <Text className="mt-4 text-gray-600">Loading requests...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={requests}
+          renderItem={renderRequestItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ padding: 16 }}
+          ListEmptyComponent={renderEmptyState}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </View>
+  );
 };
 
 export default Requests;
