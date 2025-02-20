@@ -6,7 +6,7 @@ import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'fire
 import { AntDesign } from '@expo/vector-icons';
 import EquipmentSection from '@/components/EquipmentSection';
 import { useRouter } from 'expo-router';
-
+import useLabDetails from '@/utils/LabDetails';
 const Home = () => {
     const { user, loading } = useAuth();
     const [activeTab, setActiveTab] = useState('available');
@@ -14,7 +14,7 @@ const Home = () => {
     const [requests, setRequests] = useState([]);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
-
+    const { getSpecificLab } = useLabDetails();
     const router = useRouter();
 
     useEffect(() => {
@@ -92,13 +92,15 @@ const Home = () => {
 
     const submitRequest = async () => {
         if (cart.length === 0) return;
-
+        const lab = await getSpecificLab(user.labDetails.labRef);
         try {
             const requestData = {
                 userId: user.uid,
+                lab:lab,
                 labId: user.labDetails.labId,
                 username: user.personal.name, 
                 equipment: cart.map(item => ({
+                    img:item.imageUrl,
                     equipmentId: item.id,
                     name: item.name,
                     quantity: item.quantity,

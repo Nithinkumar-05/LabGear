@@ -35,7 +35,6 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
       
       if (!allowedRoles.includes(user.role)) {
         console.log("From Protected Route - Current segment:", currentSegment);
-        
         // Fade out before redirecting
         Animated.timing(fadeAnim, {
           toValue: 0,
