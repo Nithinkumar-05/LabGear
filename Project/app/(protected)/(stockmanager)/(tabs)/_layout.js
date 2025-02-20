@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons,FontAwesome5,MaterialIcons } from '@expo/vector-icons';
 import CustomHeader from "@/components/CustomHeader";
 import { useAuth } from "@/routes/AuthContext";
 import ProtectedRoute from "@/utils/ProtectedRoute";
@@ -25,23 +25,15 @@ export default function TabsLayout() {
   }
 
   if (!user) {
-    return <Redirect href="/signIn"/>; // If there's no user, handle appropriately (like redirecting to login)
+    return <Redirect href="/signIn"/>; 
   }
-  // if(user.role !== "stockmanager"){
-  //   if(user.role === "admin"){
-  //     return <Redirect href="/(admin)/" />;
-  //    } else if(user.role === "user"){
-  //     return <Redirect href="/(user)/" />;
-  //    }  
-  // }
-
   return (
     <ProtectedRoute allowedRoles={["stock_manager"]}>
       <Tabs initialRouteName="home">
         <Tabs.Screen
           name="home"
           options={{
-            title: "Home", // Title displayed in the tab bar
+            title: "Home", 
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home" size={size} color={color} />
             ),
@@ -53,7 +45,27 @@ export default function TabsLayout() {
          options={{
           title: "Stock",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={size} color={color} />
+              <MaterialIcons name="inventory" size={size} color={color} />          
+            ),
+          header: () => <CustomHeader />,
+          }}
+          />
+          <Tabs.Screen
+         name="requests"
+         options={{
+          title: "Requests",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="mail-bulk" size={size} color={color} />
+          ),
+          header: () => <CustomHeader />,
+          }}
+          />
+          <Tabs.Screen
+         name="more"
+         options={{
+          title: "More",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="ellipsis-horizontal" size={size} color={color} />
           ),
           header: () => <CustomHeader />,
           }}

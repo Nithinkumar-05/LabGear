@@ -4,33 +4,11 @@ import { doc, getDoc } from "firebase/firestore";
 import { labsRef } from "@/firebaseConfig";
 const RequestDetails = ({ request }) => {
     const [labDetails, setLabDetails] = useState(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchLabDetails = async () => {
-            if (request?.userId) {
-                setLoading(true);
-                try {
-                    const labRef = doc(labsRef, request.labId);
-                    if (labRef) {
-                        const labSnap = await getDoc(labRef);
-                        if (labSnap.exists()) {
-                            setLabDetails(labSnap.data());
-                        } else {
-                            setLabDetails(null);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error fetching lab details:", error);
-                }
-                setLoading(false);
-            }
-        };
-        fetchLabDetails();
-    }, [request]);
+    
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white min-h-full">
 
 
             {/* Content */}
@@ -67,13 +45,13 @@ const RequestDetails = ({ request }) => {
                 {/* Lab Details */}
                 <View className="bg-gray-100 p-4 rounded-lg mb-4">
                     <Text className="text-lg font-semibold mb-2">Lab Details</Text>
-                    {loading ? (
+                    {request.labId===null ? (
                         <ActivityIndicator size="small" color="#0000ff" />
-                    ) : labDetails ? (
+                    ) : request.lab ? (
                         <View>
-                            <Text className="text-gray-600">Lab Name: {labDetails.labName}</Text>
-                            <Text className="text-gray-600">Department: {labDetails.department}</Text>
-                            <Text className="text-gray-600">Location: {labDetails.location}</Text>
+                            <Text className="text-gray-600">Lab Name: {request.lab.labName}</Text>
+                            <Text className="text-gray-600">Department: {request.lab.department}</Text>
+                            <Text className="text-gray-600">Location: {request.lab.location}</Text>
                         </View>
                     ) : (
                         <Text className="text-gray-600">No lab details found.</Text>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs,getDoc } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import {labsRef} from '@/firebaseConfig';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 const useLabDetails = () => {
     const [labs, setLabs] = useState([]);
@@ -36,6 +37,24 @@ const useLabDetails = () => {
         getLabDetails();
     }, [getLabDetails]);
 
+    const getSpecificLab = async (labRef) => {
+        try {
+            const labSnapshot = await getDoc(labRef);
+            
+            if (!labSnapshot.exists()) {
+                return null;
+            }
+            return {
+                id: labSnapshot.id,
+                ...labSnapshot.data()
+            };
+        } catch (error) {
+            const errorMessage = 'Failed to fetch lab details';
+            setError(errorMessage);
+            Alert.alert('Error', errorMessage);
+            return null;
+        }
+    };
     const refreshLabs = () => {
         return getLabDetails();
     };
@@ -44,6 +63,7 @@ const useLabDetails = () => {
         labs,
         loading,
         error,
+        getSpecificLab,
         refreshLabs
     };
 };
