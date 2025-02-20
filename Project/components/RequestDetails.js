@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image } from "react-native";
 import { doc, getDoc } from "firebase/firestore";
-
+import { labsRef } from "@/firebaseConfig";
 const RequestDetails = ({ request }) => {
     const [labDetails, setLabDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -11,7 +11,7 @@ const RequestDetails = ({ request }) => {
             if (request?.userId) {
                 setLoading(true);
                 try {
-                    const labRef = request.labName;
+                    const labRef = doc(labsRef, request.labId);
                     if (labRef) {
                         const labSnap = await getDoc(labRef);
                         if (labSnap.exists()) {
@@ -71,7 +71,7 @@ const RequestDetails = ({ request }) => {
                         <ActivityIndicator size="small" color="#0000ff" />
                     ) : labDetails ? (
                         <View>
-                            <Text className="text-gray-600">Lab Name: {labDetails.labname}</Text>
+                            <Text className="text-gray-600">Lab Name: {labDetails.labName}</Text>
                             <Text className="text-gray-600">Department: {labDetails.department}</Text>
                             <Text className="text-gray-600">Location: {labDetails.location}</Text>
                         </View>

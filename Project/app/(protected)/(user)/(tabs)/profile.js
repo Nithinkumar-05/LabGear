@@ -37,15 +37,13 @@ export default function Profile() {
     const isProfileIncomplete = Object.values(user).some(value => !value);
     setShowBanner(isProfileIncomplete);
   }, [user]);
-  
   useEffect(() => {
       const fetchCurrentLab = async () => {
-        if (user.labDetails?._key?.path?.segments) {
+        if (user.labDetails?.labId) {
           try {
             // Extract lab ID from the path segments
-            const labId = user.labDetails._key.path.segments[user.labDetails._key.path.segments.length - 1];
-            const labDoc = await getDoc(doc(labsRef, labId));
-            
+            const labId = user.labDetails.labId;
+            const labDoc = await getDoc(user.labDetails.labRef);
             if (labDoc.exists()) {
               const labData = labDoc.data();
               setLab({ id: labId, ...labData });
@@ -57,7 +55,7 @@ export default function Profile() {
       };
   
       fetchCurrentLab();
-    }, [user.labDetails]);
+    }, [user.labDetails.labId, user.labDetails.labRef]);
   if (!user) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -139,7 +137,7 @@ export default function Profile() {
       <ProfileSection
         iconName="computer"
         title="Lab Details"
-        value={user.labDetails ? String(lab.labName) : "Not assigned"}
+        value={ lab ? lab.labName : "Not assigned" }
       />
 
       <View className="h-8" /> {/* Bottom spacing */}

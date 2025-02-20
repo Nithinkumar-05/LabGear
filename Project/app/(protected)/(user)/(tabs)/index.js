@@ -41,7 +41,7 @@ const Home = () => {
 
     const fetchRequests = async () => {
         try {
-            const q = query(requestsRef, where('userId', '==', user.uid));
+            const q = query(requestsRef, where('labId', '==', user.labDetails.labId));
             const requestSnap = await getDocs(q);
             setRequests(requestSnap.docs.map(doc => ({
                 id: doc.id,
@@ -59,7 +59,6 @@ const Home = () => {
         });
     };
 
-    // Cart management functions remain the same
     const addToCart = (item) => {
         const existingItem = cart.find(i => i.id === item.id);
         if (existingItem) {
@@ -97,7 +96,8 @@ const Home = () => {
         try {
             const requestData = {
                 userId: user.uid,
-                username: user.personal.name, // Updated to use new user structure
+                labId: user.labDetails.labId,
+                username: user.personal.name, 
                 equipment: cart.map(item => ({
                     equipmentId: item.id,
                     name: item.name,
@@ -132,17 +132,16 @@ const Home = () => {
                     <View className="flex-row justify-between items-center">
                         <View>
                             <Text className="text-2xl font-bold text-gray-900">
-                                Welcome, {user?.personal?.name || 'User'} {/* Updated to use new user structure */}
+                                Welcome, {user?.personal?.name || 'User'} 
                             </Text>
                             <Text className="text-sm text-gray-600 mt-1">
-                                {user?.professional?.designation || 'Lab Programmer'} {/* Updated to use new user structure */}
+                                {user?.professional?.designation || 'Lab Programmer'} 
                             </Text>
                         </View>
                     </View>
                 </View>
             </View>
 
-            {/* Rest of the component remains the same */}
             <View className="flex-row bg-white border-b border-gray-200">
                 <TouchableOpacity
                     className={`flex-1 py-4 items-center ${activeTab === 'available' ? 'border-b-2 border-blue-500' : ''}`}

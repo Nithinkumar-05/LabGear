@@ -15,15 +15,15 @@ export default function TabsLayout() {
   if (!user) {
     return <Redirect href="/signIn" />; // or any other redirect logic
   }
-  if(user.role !== "user"){
-    if(user.role === "admin"){
-      return <Redirect href="/(protected)/(admin)/" />;
-     } else if(user.role === "stock_manager"){
-      return <Redirect href="/(protected)/(stockmanager)/" />;
-     }else{
-        return <Redirect href="/signIn"/>
-     }
-  }
+  // if(user.role !== "user"){
+  //   if(user.role === "admin"){
+  //     return <Redirect href="/(protected)/(admin)/" />;
+  //    } else if(user.role === "stock_manager"){
+  //     return <Redirect href="/(protected)/(stockmanager)/" />;
+  //    }else{
+  //       return <Redirect href="/signIn"/>
+  //    }
+  // }
   
   return (
     <ProtectedRoute allowedRoles={["user"]}> {/* Allow only users */}

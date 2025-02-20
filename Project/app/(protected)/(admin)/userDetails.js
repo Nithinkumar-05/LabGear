@@ -56,8 +56,10 @@ const UserDetails = () => {
                     {/* Profile Image or Avatar */}
                     {user.personal?.profileImgUrl ? (
                         <Image
-                            source={{ uri: user.personal.profileImgUrl }}
+                            source={{ uri: user.personal?.profileImgUrl }}
                             className="w-40 h-40 rounded-full bg-gray-200"
+                            animationType="pulse"
+                            animationDuration={1000}
                         />
                     ) : (
                         <View className="w-40 h-40">
@@ -75,7 +77,7 @@ const UserDetails = () => {
             </View>
 
             {/* Content Sections */}
-            <View className="px-6 py-6 space-y-6">
+            <View className="px-6 py-6 space-y-6 mt-6">
                 {/* Account Details */}
                 <View className="bg-white rounded-xl p-6 shadow-sm">
                     <View className="flex-row items-center mb-4">
@@ -85,10 +87,11 @@ const UserDetails = () => {
                         </Text>
                     </View>
                     <View className="space-y-4">
+                    
                         <View className="flex-row items-center">
-                            <Text className="text-gray-500 w-24">User ID</Text>
+                            <Text className="text-gray-500 w-24">Email</Text>
                             <Text className="text-gray-800 flex-1 font-medium">
-                                {user.uid || 'N/A'}
+                                {user.personal.email || 'N/A'}
                             </Text>
                         </View>
                         <View className="flex-row items-center">
@@ -107,7 +110,7 @@ const UserDetails = () => {
                 </View>
 
                 {/* Professional Details */}
-                <View className="bg-white rounded-xl p-6 shadow-sm">
+                <View className="bg-white rounded-xl p-6 shadow-sm mt-6">
                     <View className="flex-row items-center mb-4">
                         <Ionicons name="briefcase" size={22} color="#3b82f6" />
                         <Text className="text-lg font-semibold text-gray-800 ml-2">
@@ -115,6 +118,12 @@ const UserDetails = () => {
                         </Text>
                     </View>
                     <View className="space-y-4">
+                        <View className="flex-row items-center">
+                            <Text className="text-gray-500 w-24">Employee Id</Text>
+                            <Text className="text-gray-800 flex-1 font-medium">
+                                {user.professional.empId || 'N/A'}
+                            </Text>
+                        </View>
                         <View className="flex-row items-center">
                             <Text className="text-gray-500 w-24">Department</Text>
                             <Text className="text-gray-800 flex-1 font-medium">
@@ -133,12 +142,7 @@ const UserDetails = () => {
                                 {user.professional?.empId || 'N/A'}
                             </Text>
                         </View>
-                        <View className="flex-row items-center">
-                            <Text className="text-gray-500 w-24">Role</Text>
-                            <Text className="text-gray-800 flex-1 font-medium">
-                                {user.professional?.role || 'N/A'}
-                            </Text>
-                        </View>
+                        
                     </View>
                 </View>
             </View>

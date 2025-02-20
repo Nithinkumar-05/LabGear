@@ -148,7 +148,10 @@ const EditProfile = () => {
           profileImgUrl: imgURL || "https://via.placeholder.com/150",
         },
         professional: formData.professional,
-        labDetails: labDocRef, // Store as reference
+        labDetails: {
+          labId:formData.selectedLabId,
+          labRef: labDocRef,
+        },
         updatedAt: serverTimestamp(),
       };
   
@@ -268,7 +271,7 @@ const EditProfile = () => {
             >
               {currentLab ? (
                 <Picker.Item 
-                  label={`Current: ${currentLab.labname} (${currentLab.department}) - ${currentLab.location}`} 
+                  label={`Current: ${currentLab.labName} (${currentLab.department}) - ${currentLab.location}`} 
                   value={currentLab.id} 
                 />
               ) : (
@@ -277,7 +280,7 @@ const EditProfile = () => {
               {labs.map((lab) => (
                 <Picker.Item 
                   key={lab.id} 
-                  label={`${lab.labname} (${lab.department}) - ${lab.location}`} 
+                  label={`${lab.labName} (${lab.department}) - ${lab.location}`} 
                   value={lab.id} 
                 />
               ))}

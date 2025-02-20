@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity,ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity,ScrollView, RefreshControl, ActivityIndicator,Image } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, where, getDoc } from 'firebase/firestore';
 import Search from '@/components/SearchBar';
@@ -7,7 +7,6 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Avatar from '@/components/AvatarGenerator';
-import {Image} from 'expo-image'
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,9 +15,9 @@ const Users = () => {
     const router = useRouter();
 
     const fetchLabDetails = async (user) => {
-        if (user?.labdetails) {
+        if (user?.labDetails) {
             try {
-                const labSnap = await getDoc(user.labdetails);
+                const labSnap = await getDoc(user.labDetails.labRef);
 
                 if (labSnap.exists()) {
                     return { id: labSnap.id, ...labSnap.data() };
@@ -44,7 +43,6 @@ const Users = () => {
                 })
             );
             setUsers(userList);
-            // console.log(userList);
         } catch (error) {
             console.error('Error fetching users:', error);
         }
@@ -78,7 +76,7 @@ const Users = () => {
             </View>
         );
     }
-
+    
     return (
         <ScrollView
             className="flex-1 bg-gray-100"
@@ -123,13 +121,14 @@ const Users = () => {
                                 activeOpacity={0.7}
                             >
                                 <View className="p-4 flex-row items-center space-x-4 gap-3">
-                                    {user.personal?.profileImgUrl ? (
+
+                                {user.personal.profileImgUrl ? (
                                         <Image
-                                            source={{
-                                                uri: user.personal?.profileImgUrl
-                                            }}
-                                            className="w-14 h-14 rounded-full bg-gray-200"
-                                        />) : (
+                                            source={{ uri: user.personal.profileImgUrl }}
+                                            className="w-14 h-14 rounded-full"
+                                            contentFit="cover"
+                                        />
+                                    ) : (
                                         <Avatar name={user.personal?.name} size={50} />
                                     )}
                                     <View className="flex-1">
@@ -144,7 +143,7 @@ const Users = () => {
                                             <View className="flex-row items-center mt-2">
                                                 <Ionicons name="flask-outline" size={14} color="#6b7280" />
                                                 <Text className="text-xs text-gray-500 ml-1">
-                                                    {user.labInfo.labname} • {user.labInfo.department}
+                                                    {user.labInfo.labName} • {user.labInfo.department}
                                                 </Text>
                                             </View>
                                         )}

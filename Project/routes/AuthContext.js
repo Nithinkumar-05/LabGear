@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(undefined);
   const [loading, setLoading] = useState(true);
+  const [labInfo, setLabInfo] = useState(null);
   const router = useRouter();
 
   // Fetch complete user details
@@ -56,7 +57,10 @@ export function AuthProvider({ children }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           role: "user",
-          labdetails: "", // Keeping as reference
+          labDetails: {
+            labId: "",
+            labRef: null
+          },
           personal: {
             dob: "",
             email: "",

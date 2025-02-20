@@ -19,29 +19,6 @@ const SignIn = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
 
-  // Navigate to the appropriate dashboard based on the user's role
-  const navigateToRoleDashboard = (userRole) => {
-    switch (userRole) {
-      case "admin":
-        router.replace("/(protected)/(admin)/");
-        break;
-      case "stock_manager":
-        router.replace("/(protected)/(stockmanager)/");
-        break;
-      case "user":
-        router.replace("/(protected)/(user)/");
-        break;
-      default:
-        router.replace("/(protected)/home");
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigateToRoleDashboard(role);
-    }
-  }, [isAuthenticated, role]);
-
   const signIn = async () => {
     setLoading(true);
     setError(null);
@@ -59,8 +36,7 @@ const SignIn = () => {
         setLoading(false);
         return;
       }
-      const userRole = response.data.role;
-      navigateToRoleDashboard(userRole);
+      
     } catch (e) {
       setError(e.message || "Failed to sign in. Please try again.");
     } finally {
