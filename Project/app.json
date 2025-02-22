@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.nithineruventi.LabGear"
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/lab_gear.jpg",
         "backgroundColor": "#ffffff"
