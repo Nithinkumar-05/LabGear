@@ -1,10 +1,10 @@
 import { View, Text, TouchableOpacity, Image, ScrollView, TextInput, Alert } from 'react-native';
 import { componentsRef } from '@/firebaseConfig';
-import { getDocs, doc, updateDoc } from 'firebase/firestore';
+import { getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { MaterialIcons, AntDesign, Feather } from '@expo/vector-icons';
+import { useAuth } from '@/routes/AuthContext';
 
-// Component for an individual equipment item with quantity controls
 const InventoryItemCard = ({ item, onUpdate, onHistory }) => {
   const [quantity, setQuantity] = useState(item.quantity || 0);
   const [notes, setNotes] = useState('');
@@ -109,6 +109,7 @@ const Inventory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const {user} = useAuth();
 
   const fetchEquipment = async () => {
     setIsLoading(true);
@@ -157,26 +158,26 @@ const Inventory = () => {
 
   const handleUpdate = async (updatedItem) => {
     try {
-      // Create history entry
+      const itemRef = doc(componentsRef, updatedItem.id);
+      const currentItemDoc = await getDoc(itemRef);
+      const currentItem = currentItemDoc.data();
+      
       const historyEntry = {
         date: new Date().toISOString(),
-        previousQuantity: updatedItem.quantity,
+        previousQuantity: currentItem.quantity || 0,
         newQuantity: updatedItem.quantity,
         notes: updatedItem.notes || '',
-        updatedBy: 'current_user_id', // Replace with actual user ID from auth
+        updatedBy: user.uid,
       };
       
-      // Update the document in Firestore
-      const itemRef = doc(componentsRef, updatedItem.id);
       await updateDoc(itemRef, {
         quantity: updatedItem.quantity,
         lastUpdated: new Date().toISOString(),
-        history: [...(updatedItem.history || []), historyEntry]
+        history: [...(currentItem.history || []), historyEntry]
       });
       
       Alert.alert('Success', `${updatedItem.name} inventory updated successfully`);
       
-      // Refresh inventory data
       fetchEquipment();
     } catch (error) {
       console.error('Error updating inventory:', error);
@@ -189,7 +190,7 @@ const Inventory = () => {
       `${item.name} - History`,
       item.history && item.history.length > 0
         ? item.history
-            .slice(-5) // Show last 5 entries
+            .slice(-5) 
             .map(entry => 
               `${new Date(entry.date).toLocaleDateString()}: ${entry.previousQuantity} → ${entry.newQuantity}\n${entry.notes ? `Note: ${entry.notes}` : ''}`
             )
@@ -211,7 +212,7 @@ const Inventory = () => {
 
   return (
     <ScrollView className="flex-1 bg-gray-100">
-      <View className="mt-4 px-3 pb-6">
+      <View className="mt-4 px-2 pb-6">
         <View className="flex-row items-center justify-center mb-6">
           <MaterialIcons name="inventory" size={28} color="#3B82F6" />
           <Text className="text-3xl font-bold text-center ml-2">Inventory</Text>
@@ -247,8 +248,8 @@ const Inventory = () => {
             className={`flex-1 py-3 ${activeTab === 'non-consumable' ? 'bg-blue-500' : 'bg-white'}`}
             onPress={() => setActiveTab('non-consumable')}
           >
-            <Text className={`text-center font-medium ${activeTab === 'non-consumable' ? 'text-white' : 'text-gray-800'}`}>
-              Equipment
+            <Text className={`text-center font-medium ${activeTab === 'non-consumable' ? 'text-white' : 'text-gray-800'} ml-1`}>
+              Non-Consumable
             </Text>
           </TouchableOpacity>
           <TouchableOpacity 
@@ -256,7 +257,7 @@ const Inventory = () => {
             onPress={() => setActiveTab('consumable')}
           >
             <Text className={`text-center font-medium ${activeTab === 'consumable' ? 'text-white' : 'text-gray-800'}`}>
-              Consumables
+              Consumable
             </Text>
           </TouchableOpacity>
         </View>
