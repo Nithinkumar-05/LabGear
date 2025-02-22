@@ -3,12 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityInd
 import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
-import { db, componentsRef } from '@/firebaseConfig';
-
+import { db, componentsRef,requestsRef } from '@/firebaseConfig';
+import { useAuth } from '@/routes/AuthContext';
 const RequestSummary = () => {
   const router = useRouter();
   const { requestId } = useLocalSearchParams();
-  
+  const {user} = useAuth();
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [inventory, setInventory] = useState({});
@@ -21,9 +21,8 @@ const RequestSummary = () => {
   useEffect(() => {
     const fetchRequestDetails = async () => {
       try {
-        const requestRef = doc(db, 'requests', requestId);
+        const requestRef = doc(requestsRef, requestId);
         const requestSnap = await getDoc(requestRef);
-        
         if (requestSnap.exists()) {
           const requestData = { id: requestSnap.id, ...requestSnap.data() };
           setRequest(requestData);
@@ -166,7 +165,7 @@ const RequestSummary = () => {
       // Create new document in 'approvedRequests'
       await addDoc(approvedRef, {
         requestId,
-        approvedBy: 'current_user_id', // Replace with actual user ID
+        approvedBy: user.uid, // Replace with actual user ID
         approvedAt: new Date().toISOString(),
         equipment: approvedEquipment,
         status: approvedEquipment.length === request.equipment.length ? 'fully approved' : 'partially approved',
@@ -284,7 +283,7 @@ const RequestSummary = () => {
       await updateDoc(requestRef, {
         status: 'rejected',
         rejectionReason,
-        rejectedBy: 'current_user_id', // Replace with actual user ID
+        rejectedBy: user.uid, // Replace with actual user ID
         rejectedAt: new Date().toISOString(),
       });
       
@@ -316,13 +315,6 @@ const RequestSummary = () => {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <View className="bg-white py-4 px-4 flex-row items-center shadow-sm">
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <AntDesign name="arrowleft" size={24} color="#4F46E5" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800 flex-1">Request Details</Text>
-      </View>
-      
       <ScrollView className="flex-1">
         {/* Request Info */}
         <View className="bg-white m-4 rounded-xl overflow-hidden shadow-sm">
