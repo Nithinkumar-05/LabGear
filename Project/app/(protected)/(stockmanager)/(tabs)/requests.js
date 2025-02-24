@@ -20,11 +20,22 @@ const Requests = () => {
       setLoading(true);
       
       const requestsRef = collection(db, 'Requests');
-      const q = query(
-        requestsRef,
-        where('status', '==', status),
-        // orderBy('createdAt', 'desc')
-      );
+      let q;
+      
+      // Special handling for the approved tab
+      if (status === 'approved') {
+        // Use a compound query to get both approved and partially approved
+        q = query(
+          requestsRef,
+          where('status', 'in', ['approved', 'partially approved'])
+        );
+      } else {
+        // Normal query for other tabs
+        q = query(
+          requestsRef,
+          where('status', '==', status)
+        );
+      }
       
       const querySnapshot = await getDocs(q);
       const requestsList = [];
@@ -68,7 +79,7 @@ const Requests = () => {
     <View className="flex-1 justify-center items-center py-10">
       <MaterialIcons name="inbox" size={56} color="#D1D5DB" />
       <Text className="mt-4 text-gray-500 text-lg font-medium">
-        No {activeTab} requests found
+        No {activeTab === 'approved' ? 'approved or partially approved' : activeTab} requests found
       </Text>
     </View>
   );
@@ -88,14 +99,14 @@ const Requests = () => {
             Request #{item.id.slice(0, 6)}
           </Text>
           <View className={`px-2 py-1 rounded-full ${
-            activeTab === 'approved' ? 'bg-green-100' :
-            activeTab === 'pending' ? 'bg-amber-100' : 'bg-red-100'
+            item.status === 'approved' || item.status === 'partially approved' ? 'bg-green-100' :
+            item.status === 'pending' ? 'bg-amber-100' : 'bg-red-100'
           }`}>
             <Text className={`text-xs font-medium ${
-              activeTab === 'approved' ? 'text-green-600' :
-              activeTab === 'pending' ? 'text-amber-500' : 'text-red-500'
+              item.status === 'approved' || item.status === 'partially approved' ? 'text-green-600' :
+              item.status === 'pending' ? 'text-amber-500' : 'text-red-500'
             }`}>
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
             </Text>
           </View>
         </View>
@@ -131,7 +142,7 @@ const Requests = () => {
           )}
         </View>
         
-        {activeTab === 'rejected' && item.rejectionReason && (
+        {item.status === 'rejected' && item.rejectionReason && (
           <View className="mt-2 bg-red-50 p-2 rounded-md">
             <Text className="text-red-600 text-sm">
               Reason: {item.rejectionReason.length > 50 
@@ -144,9 +155,9 @@ const Requests = () => {
       
       <View className="bg-gray-50 py-2 px-4 flex-row justify-between items-center">
         <Text className="text-gray-500 text-xs">
-          {activeTab === 'approved' 
+          {(item.status === 'approved' || item.status === 'partially approved')
             ? `Approved ${new Date(item.approvedAt).toLocaleDateString()}` 
-            : activeTab === 'rejected'
+            : item.status === 'rejected'
               ? `Rejected ${new Date(item.rejectedAt).toLocaleDateString()}`
               : 'Awaiting review'}
         </Text>

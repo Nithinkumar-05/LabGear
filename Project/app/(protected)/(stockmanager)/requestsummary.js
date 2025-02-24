@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Image } from 'react-native';
 import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
-import { db, componentsRef,requestsRef } from '@/firebaseConfig';
+import { doc, getDoc, updateDoc, collection, getDocs,addDoc } from 'firebase/firestore';
+import { db, componentsRef,requestsRef,approvedRequestsRef } from '@/firebaseConfig';
 import { useAuth } from '@/routes/AuthContext';
 const RequestSummary = () => {
   const router = useRouter();
@@ -144,8 +144,8 @@ const RequestSummary = () => {
   
     try {
       setSubmitting(true);
-      const requestRef = doc(db, 'requests', requestId);
-      const approvedRef = collection(db, 'approvedRequests');
+      const requestRef = doc(db, 'Requests', requestId);
+      const approvedRef = collection(db, 'approvedRequestsRef');
   
       const approvedEquipment = request.equipment
         .filter(item => approvedQuantities[item.equipmentId] > 0)
@@ -165,10 +165,11 @@ const RequestSummary = () => {
       // Create new document in 'approvedRequests'
       await addDoc(approvedRef, {
         requestId,
+        labId: request.labId,
         approvedBy: user.uid, // Replace with actual user ID
         approvedAt: new Date().toISOString(),
         equipment: approvedEquipment,
-        status: approvedEquipment.length === request.equipment.length ? 'fully approved' : 'partially approved',
+        status: approvedEquipment.length === request.equipment.length ? 'approved' : 'partially approved',
       });
   
       // Update inventory

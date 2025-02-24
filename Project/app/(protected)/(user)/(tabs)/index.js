@@ -206,7 +206,7 @@ const Home = () => {
                                             <Text className="text-lg font-semibold">
                                                 Request #{request.id.slice(0, 6)}
                                             </Text>
-                                            <View className={`px-3 py-1 rounded-full ${request.status === 'approved' ? 'bg-green-100' : 'bg-yellow-100'
+                                            <View className={`px-3 py-1 rounded-full ${request.status === 'approved'|| request.status ==='partially approved' ? 'bg-green-100' : 'bg-yellow-100'
                                                 }`}>
                                                 <Text className={`text-sm font-medium ${request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
                                                     }`}>

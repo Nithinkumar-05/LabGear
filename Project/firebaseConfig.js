@@ -25,3 +25,4 @@ export const usersRef = collection(db, 'users');
 export const componentsRef = collection(db, 'components');
 export const requestsRef = collection(db, 'Requests');
 export const labsRef = collection(db,"labs");
+export const approvedRequestsRef = collection(db, 'approvedRequests');
