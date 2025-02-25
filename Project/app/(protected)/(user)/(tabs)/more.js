@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '@/routes/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const MenuItem = ({ iconName, title, onPress, showBorder = true }) => (
   <TouchableOpacity
@@ -21,12 +22,12 @@ const SectionTitle = ({ title }) => (
   </Text>
 );
 
-export default function More({ navigation }) {
+export default function More() {
   const { logout } = useAuth();
   const appVersion = "1.0.0"; // Replace with your actual app version
-
+  const router = useRouter();
   const navigateToScreen = (screenName) => {
-    navigation.navigate(screenName);
+    router.push(screenName);
   };
 
   return (
@@ -40,6 +41,11 @@ export default function More({ navigation }) {
         iconName="calendar-today"
         title="Lab Schedule"
         onPress={() => navigateToScreen('LabSchedule')}
+      />
+      <MenuItem
+        iconName={"receipt"}
+        title="Approved Reports"
+        onPress={() => navigateToScreen('/(user)/approvedRequests')}
       />
       <SectionTitle title="ACCOUNT" />
       <MenuItem

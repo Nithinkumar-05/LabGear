@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityInd
 import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc, updateDoc, collection, getDocs,addDoc } from 'firebase/firestore';
-import { db, componentsRef,requestsRef,approvedRequestsRef } from '@/firebaseConfig';
+import { db, componentsRef,requestsRef,approvedRequestsRef as approvedRef} from '@/firebaseConfig';
 import { useAuth } from '@/routes/AuthContext';
 const RequestSummary = () => {
   const router = useRouter();
@@ -145,7 +145,6 @@ const RequestSummary = () => {
     try {
       setSubmitting(true);
       const requestRef = doc(db, 'Requests', requestId);
-      const approvedRef = collection(db, 'approvedRequestsRef');
   
       const approvedEquipment = request.equipment
         .filter(item => approvedQuantities[item.equipmentId] > 0)

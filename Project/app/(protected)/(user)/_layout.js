@@ -27,6 +27,14 @@ const _layout = () => {
         name="notificationpreferences"
         options={{ presentation: "fullScreenModal", title: "Notification Preferences", animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="approvedRequests"
+        options={{ presentation: "fullScreenModal", title: "Approved Request", animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="invoice"
+        options={{ presentation: "fullScreenModal", title: "Invoice Details", animation: "slide_from_right" }}
+      />
     </Stack>
 
   );
