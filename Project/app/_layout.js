@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { useAuth, AuthProvider } from "@/routes/AuthContext";
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
-import NotificationProvider from "@/routes/NotificationContext";
+import { NotificationProvider } from "@/routes/NotificationContext";
 
 
 Notifications.setNotificationHandler({
@@ -76,10 +76,13 @@ const MainLayout = () => {
 
 export default function RootLayout() {
   return (
-    <NotificationProvider>
-      <AuthProvider>
+
+    <AuthProvider>
+      <NotificationProvider>
         <MainLayout />
-      </AuthProvider>
-    </NotificationProvider>
+      </NotificationProvider>
+
+    </AuthProvider>
+    // </NotificationProvider>
   );
 }
