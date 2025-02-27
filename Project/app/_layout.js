@@ -3,7 +3,17 @@ import "../global.css";
 import { View } from "react-native";
 import { useAuth, AuthProvider } from "@/routes/AuthContext";
 import { useEffect } from "react";
+import * as Notifications from "expo-notifications";
+import { NotificationProvider } from "@/routes/NotificationContext";
 
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+})
 const MainLayout = () => {
   const { isAuthenticated } = useAuth(); // Use the authentication state from context
   const router = useRouter();
@@ -66,8 +76,13 @@ const MainLayout = () => {
 
 export default function RootLayout() {
   return (
+
     <AuthProvider>
-      <MainLayout />
+      <NotificationProvider>
+        <MainLayout />
+      </NotificationProvider>
+
     </AuthProvider>
+    // </NotificationProvider>
   );
 }
