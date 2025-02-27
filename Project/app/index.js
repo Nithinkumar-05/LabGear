@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { View, Image, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import OnBoarding from "@/components/OnBoarding";
+
 export default function SplashScreen() {
+
+  const { notification, expoPushToken, error } = useNotification();
   const router = useRouter();
   const progress = useRef(new Animated.Value(0)).current;
   const [onboardingStatus, setOnboardingStatus] = useState(null);
