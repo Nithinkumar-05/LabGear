@@ -11,10 +11,17 @@ const _layout = () => {
         />
 
         <Stack.Screen
-        name="requestsummary"
-        options={{ presentation: "fullScreenModal", title: "RequestSummary", animation: "slide_from_right" }}
-      />
-
+            name="requestsummary"
+            options={{ presentation: "fullScreenModal", title: "RequestSummary", animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+            name="trackBudget"
+            options = {
+                {
+                    title: "Track Budget",
+                    headerShown: true,
+                }
+        }/>
     </Stack> );
 }
  

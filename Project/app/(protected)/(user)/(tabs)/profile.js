@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ScrollView, View, Image, TouchableOpacity, RefreshControl } from "react-native";
-import { Text } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "@/routes/AuthContext";
 import { useRouter } from "expo-router";
@@ -9,6 +9,7 @@ import Avatar from "@/components/AvatarGenerator";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig"; // Fixed import
 import Loading from "@/components/Loading";
+import { Activity } from "lucide-react-native";
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
   <View className="px-4 py-2 bg-gray-50">
@@ -99,7 +100,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Loading />
+        <ActivityIndicator animating={true} color="#3182CE" size="large" />
       </View>
     );
   }

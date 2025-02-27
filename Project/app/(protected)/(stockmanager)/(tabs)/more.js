@@ -29,7 +29,7 @@ export default function More() {
 
   const navigateToScreen = (screenName) => {
     router.push({
-      pathname: `/(admin)/${screenName}`
+      pathname: `/(stockmanager)/${screenName}`
     });
   };
 
@@ -53,7 +53,7 @@ export default function More() {
       <MenuItem
         iconName="account-balance-wallet"
         title="Track Budget"
-        onPress={() => navigateToScreen('BudgetTracker')}
+        onPress={() => navigateToScreen('trackBudget')}
       />
       <SectionTitle title="ACCOUNT" />
       <MenuItem

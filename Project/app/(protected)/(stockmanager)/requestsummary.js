@@ -185,7 +185,7 @@ const RequestSummary = () => {
   
       // Update request status
       await updateDoc(requestRef, {
-        status: approvedEquipment.length === request.equipment.length ? 'fully approved' : 'partially approved',
+        status: approvedEquipment.length === request.equipment.length ? 'approved' : 'partially approved',
         approvedAt: new Date().toISOString(),
       });
   
