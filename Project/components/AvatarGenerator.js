@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, Animated } from 'react-native';
-
+//Avatar Generator
 
 const backgroundColors = [
     '#F44336', // Red
