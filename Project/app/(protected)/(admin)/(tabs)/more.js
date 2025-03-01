@@ -53,7 +53,7 @@ export default function More() {
       <MenuItem
         iconName="account-balance-wallet"
         title="Track Budget"
-        onPress={() => navigateToScreen('BudgetTracker')}
+        onPress={() => navigateToScreen('trackbudget')}
       />
       <SectionTitle title="ACCOUNT" />
       <MenuItem

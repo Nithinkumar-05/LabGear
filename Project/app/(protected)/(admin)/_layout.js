@@ -52,6 +52,12 @@ const AdminLayout = () => {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="trackbudget"
+        options={{
+          title: "Track Budget",
+          presentation: "fullScreenModal",
+        }}/>
     </Stack>
   );
 };
