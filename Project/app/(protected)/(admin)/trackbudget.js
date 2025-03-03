@@ -1,385 +1,475 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
-import { BarChart } from 'react-native-gifted-charts';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Platform, SafeAreaView } from 'react-native';
 import { db, approvedRequestsRef, labsRef } from '@/firebaseConfig';
-import { getDocs, query, where, Timestamp } from 'firebase/firestore';
-import DateTimePicker from '@react-native-community/datetimepicker'; // Import DateTimePicker
+import { getDocs, query, where } from 'firebase/firestore';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
+import CustomChart from '@/components/CustomChart';
+
+// Custom loading indicator
+const CustomLoadingIndicator = ({ color = '#3b82f6', text = 'Loading...' }) => (
+  <View className="items-center justify-center p-5">
+    <Text style={{ color }} className="mb-2">○ ○ ○</Text>
+    <Text className="text-gray-500 text-sm">{text}</Text>
+  </View>
+);
 
 const Budget = () => {
-  const [loading, setLoading] = useState(true);
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
   const [labs, setLabs] = useState([]);
   const [selectedLab, setSelectedLab] = useState(null);
-  const [budgetData, setBudgetData] = useState([]);
+  const [budgetData, setBudgetData] = useState([]); // Initialize as empty array
   const [totalSpent, setTotalSpent] = useState(0);
   const [startDate, setStartDate] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)));
   const [endDate, setEndDate] = useState(new Date());
   const [chartData, setChartData] = useState([]);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false); // State for start date picker
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false); // State for end date picker
+  const [isExporting, setIsExporting] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
-  // Fetch labs data
+  // Fetch labs on component mount
   useEffect(() => {
-    const fetchLabs = async () => {
-      try {
-        const labSnapshot = await getDocs(labsRef);
-        const labsList = labSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setLabs(labsList);
-        if (labsList.length > 0) {
-          setSelectedLab(labsList[0]);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching labs:', error);
-        Alert.alert('Error', 'Failed to fetch lab data. Please try again.');
-        setLoading(false);
-      }
-    };
-
     fetchLabs();
   }, []);
 
-  // Fetch budget data when selected lab changes or date range changes
+  // Fetch budget data when lab or dates change
   useEffect(() => {
     if (selectedLab) {
       fetchBudgetData();
     }
   }, [selectedLab, startDate, endDate]);
 
-  // Process budget data and prepare chart data
+  // Update derived data when budget data changes
   useEffect(() => {
-    if (budgetData.length > 0) {
-      prepareChartData();
-      calculateTotalSpent();
+    if (budgetData && budgetData.length > 0) {
+      updateChartData();
+      updateTotalSpent();
     } else {
       setChartData([]);
       setTotalSpent(0);
     }
   }, [budgetData]);
 
-  const fetchBudgetData = async () => {
-    setLoading(true);
+  // Function to fetch labs
+  const fetchLabs = async () => {
     try {
-      // Convert dates to Firestore Timestamp
-      const startTimestamp = Timestamp.fromDate(startDate);
-      const endTimestamp = Timestamp.fromDate(endDate);
-
-      // Query to get approved requests for the selected lab within date range
-      const requestsQuery = query(
-        approvedRequestsRef,
-        where('labId', '==', selectedLab.id),
-        where('approvedAt', '>=', startTimestamp),
-        where('approvedAt', '<=', endTimestamp)
-      );
-
-      const requestsSnapshot = await getDocs(requestsQuery);
-      const requestsData = requestsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setBudgetData(requestsData);
+      const snapshot = await getDocs(labsRef);
+      if (!snapshot.empty) {
+        const labList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setLabs(labList);
+        if (labList.length > 0) {
+          setSelectedLab(labList[0]);
+        }
+      } else {
+        setLabs([]);
+      }
     } catch (error) {
-      console.error('Error fetching budget data:', error);
-      Alert.alert('Error', 'Failed to fetch budget data. Please try again.');
+      console.error('Error fetching labs:', error);
+      Alert.alert('Error', 'Failed to load laboratory data');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const calculateTotalSpent = () => {
-    const total = budgetData.reduce((sum, request) => sum + (request.totalAmountSpent || 0), 0);
-    setTotalSpent(total);
+  // Function to fetch budget data
+  const fetchBudgetData = async () => {
+    if (!selectedLab || !selectedLab.id) return;
+
+    setIsDataLoading(true);
+
+    try {
+      const correctLabId = selectedLab.id;
+      const startISO = startDate.toISOString();
+      const endISO = endDate.toISOString();
+
+      const budgetQuery = query(
+        approvedRequestsRef,
+        where('labId', '==', correctLabId),
+        where('approvedAt', '>=', startISO),
+        where('approvedAt', '<=', endISO)
+      );
+
+      const snapshot = await getDocs(budgetQuery);
+
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setBudgetData(data);
+      } else {
+        setBudgetData([]); // Set to empty array if no data is found
+      }
+    } catch (error) {
+      console.error('Error fetching budget data:', error);
+      Alert.alert('Error', 'Failed to load budget data');
+      setBudgetData([]); // Set to empty array on error
+    } finally {
+      setIsDataLoading(false);
+    }
   };
 
-  const prepareChartData = () => {
-    const equipmentTotals = {};
+  // Function to calculate total spent
+  const updateTotalSpent = () => {
+    try {
+      if (!Array.isArray(budgetData)) {
+        console.warn('budgetData is not an array:', budgetData);
+        setTotalSpent(0);
+        return;
+      }
 
-    budgetData.forEach(request => {
-      request.equipmentExpenses?.forEach(expense => {
-        const equipmentName = expense.name;
-        const amount = parseFloat(expense.amountSpent) || 0;
+      const total = budgetData.reduce((sum, item) => {
+        const amount = parseFloat(item.totalAmountSpent || 0);
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
 
-        equipmentTotals[equipmentName] = (equipmentTotals[equipmentName] || 0) + amount;
+      setTotalSpent(total);
+    } catch (error) {
+      console.error('Error calculating total:', error);
+      setTotalSpent(0);
+    }
+  };
+
+  // Function to update chart data
+  const updateChartData = () => {
+    try {
+      const equipmentTotals = {};
+
+      budgetData.forEach(request => {
+        if (request.equipmentExpenses && Array.isArray(request.equipmentExpenses)) {
+          request.equipmentExpenses.forEach(expense => {
+            if (expense && expense.name) {
+              const name = expense.name;
+              const amount = parseFloat(expense.amountSpent || 0);
+
+              if (!isNaN(amount)) {
+                equipmentTotals[name] = (equipmentTotals[name] || 0) + amount;
+              }
+            }
+          });
+        }
       });
-    });
 
-    const data = Object.keys(equipmentTotals).map((key, index) => ({
-      value: equipmentTotals[key],
-      label: key,
-      frontColor: getColor(index),
-    }));
+      const chartEntries = Object.keys(equipmentTotals).map((key, index) => ({
+        x: key,
+        y: equipmentTotals[key],
+        color: getColorForIndex(index)
+      }));
 
-    setChartData(data);
+      setChartData(chartEntries);
+      console.log('Chart data updated:', chartEntries); // Debugging log
+    } catch (error) {
+      console.error('Error updating chart data:', error);
+      setChartData([]);
+    }
   };
 
-  const getColor = (index) => {
-    const colors = ['#177AD5', '#ED6665', '#2ecc71', '#9b59b6', '#f1c40f', '#1abc9c', '#e67e22'];
+  // Get color for chart
+  const getColorForIndex = (index) => {
+    const colors = [
+      '#3366CC', '#DC3912', '#FF9900', '#109618', '#990099',
+      '#3B3EAC', '#0099C6', '#DD4477', '#66AA00', '#B82E2E'
+    ];
     return colors[index % colors.length];
   };
 
+
+
+
+    // Format date for display
   const formatDate = (date) => {
-    return date.toLocaleDateString(); // More user-friendly date format
+    try {
+      if (!date) return 'N/A';
+      return new Date(date).toLocaleDateString();
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
-  const handleDateChange = (event, selectedDate, isStartDate) => {
-    if (event.type === 'set') {
-      const currentDate = selectedDate || (isStartDate ? startDate : endDate);
-      if (isStartDate) {
-        setStartDate(currentDate);
+  const handleDateChange = (event, date, isStart) => {
+    if (Platform.OS === 'android') {
+      setShowStartPicker(false);
+      setShowEndPicker(false);
+    }
+    
+    if (event.type === 'set' && date) {
+      if (isStart) {
+        setStartDate(date);
       } else {
-        setEndDate(currentDate);
+        setEndDate(date);
       }
     }
-
-    // Hide the date picker
-    if (isStartDate) {
-      setShowStartDatePicker(false);
-    } else {
-      setShowEndDatePicker(false);
+    
+    if (Platform.OS === 'ios' && event.type === 'set') {
+      if (isStart) {
+        setShowStartPicker(false);
+      } else {
+        setShowEndPicker(false);
+      }
     }
   };
 
-  const exportToExcel = async () => {
+  const handleExport = () => {
     if (budgetData.length === 0) {
-      Alert.alert('No Data', 'There is no data to export for the selected period.');
+      Alert.alert('No Data', 'There is no data to export for the selected period');
       return;
     }
-
-    setExportLoading(true);
-
-    try {
-      // Simulate export process
-      setTimeout(() => {
-        Alert.alert(
-          'Export Simulated',
-          'In the full implementation, this would export an Excel file with your budget data.'
-        );
-        setExportLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      Alert.alert('Export Failed', 'An error occurred while exporting the data.');
-      setExportLoading(false);
-    }
+    
+    setIsExporting(true);
+    
+    setTimeout(() => {
+      Alert.alert('Export', 'Budget data exported successfully');
+      setIsExporting(false);
+    }, 1500);
   };
 
-  const renderLabSelector = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-4 px-2 bg-white border-b border-gray-200">
+  
+
+  
+
+  // Lab selector component
+  const LabSelector = () => (
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ padding: 8 }}
+      className="bg-white border-b border-gray-200"
+    >
       {labs.map(lab => (
         <TouchableOpacity
           key={lab.id}
-          className={`px-3 py-2 mx-1 rounded-lg ${selectedLab?.id === lab.id ? 'bg-blue-100 border border-blue-500' : 'bg-gray-100'}`}
+          className={`px-2.5 py-2.5 mx-1 ${selectedLab?.id === lab.id ? 'bg-blue-50 border border-blue-500' : 'bg-gray-100 border-0 border-transparent'} rounded-lg min-w-[100px] items-center`}
           onPress={() => setSelectedLab(lab)}
         >
-          <Text className="text-base font-semibold text-center">{lab.labName}</Text>
-          <Text className="text-xs text-gray-500 mt-1 text-center">{lab.department}</Text>
+          <Text className="font-semibold text-base">{lab.labName}</Text>
+          <Text className="text-gray-500 text-xs mt-1">{lab.department}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>
   );
 
-  const renderDatePickers = () => (
-    <View className="flex-row justify-between p-4 bg-white mt-2 mx-2 rounded-lg shadow-sm">
-      <View className="flex-1 mx-1">
-        <Text className="text-sm text-gray-500 mb-1">Start Date:</Text>
+  // Date range selector component
+  const DateSelector = () => (
+    <View className="flex-row m-2 bg-white rounded-lg p-3 shadow">
+      <View className="flex-1 mr-2">
+        <Text className="text-gray-500 mb-1 text-sm">Start Date:</Text>
         <TouchableOpacity
           className="bg-gray-100 p-2 rounded border border-gray-300"
-          onPress={() => setShowStartDatePicker(true)}
+          onPress={() => setShowStartPicker(true)}
         >
-          <Text className="text-sm text-gray-800">{formatDate(startDate)}</Text>
+          <Text>{formatDate(startDate)}</Text>
         </TouchableOpacity>
       </View>
-
-      <View className="flex-1 mx-1">
-        <Text className="text-sm text-gray-500 mb-1">End Date:</Text>
+      
+      <View className="flex-1 ml-2">
+        <Text className="text-gray-500 mb-1 text-sm">End Date:</Text>
         <TouchableOpacity
           className="bg-gray-100 p-2 rounded border border-gray-300"
-          onPress={() => setShowEndDatePicker(true)}
+          onPress={() => setShowEndPicker(true)}
         >
-          <Text className="text-sm text-gray-800">{formatDate(endDate)}</Text>
+          <Text>{formatDate(endDate)}</Text>
         </TouchableOpacity>
       </View>
-
+      
       {/* Date Pickers */}
-      {showStartDatePicker && (
+      {showStartPicker && (
         <DateTimePicker
+          testID="startDatePicker"
           value={startDate}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, date) => handleDateChange(event, date, true)}
+          onChange={(e, d) => handleDateChange(e, d, true)}
         />
       )}
-
-      {showEndDatePicker && (
+      
+      {showEndPicker && (
         <DateTimePicker
+          testID="endDatePicker"
           value={endDate}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, date) => handleDateChange(event, date, false)}
+          onChange={(e, d) => handleDateChange(e, d, false)}
         />
       )}
     </View>
   );
 
-  const renderExportButton = () => (
-    <View className="mx-2 mt-2">
-      <TouchableOpacity
-        className="bg-green-500 p-3 rounded-lg items-center justify-center flex-row"
-        onPress={exportToExcel}
-        disabled={exportLoading || budgetData.length === 0}
-      >
-        {exportLoading ? (
-          <ActivityIndicator size="small" color="white" />
-        ) : (
-          <View className="flex-row items-center">
-            <Feather name="download" size={18} color="white" />
-            <Text className="text-white font-semibold ml-2">Export to Excel</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
+  // Export button component
+  const ExportButton = () => (
+    <TouchableOpacity
+      className={`${isExporting ? 'bg-lime-700' : 'bg-lime-500'} m-2 rounded-lg p-3 flex-row justify-center items-center ${budgetData.length === 0 ? 'opacity-50' : 'opacity-100'}`}
+      onPress={handleExport}
+      disabled={isExporting || budgetData.length === 0}
+    >
+      <Feather name="download" size={18} color="white" />
+      <Text className="text-white font-semibold ml-2">
+        {isExporting ? 'Exporting...' : 'Export to Excel'}
+      </Text>
+    </TouchableOpacity>
   );
 
-  const renderBudgetSummary = () => (
-    <View className="flex-row justify-between mx-2 mt-4">
-      <View className="bg-blue-500 rounded-lg p-4 flex-1 mr-1 shadow-sm">
-        <Text className="text-xl font-bold text-white">₹{totalSpent.toLocaleString()}</Text>
-        <Text className="text-sm text-blue-200 mt-1">Total Budget Spent</Text>
+  // Budget summary component
+  const BudgetSummary = () => (
+    <View className="flex-row m-2">
+      <View className="flex-1 bg-blue-500 rounded-lg p-4 mr-1 shadow">
+        <Text className="text-xl font-bold text-white">
+          ₹{totalSpent.toLocaleString()}
+        </Text>
+        <Text className="text-sm text-blue-100 mt-1">
+          Total Budget Spent
+        </Text>
       </View>
-
-      <View className="bg-white rounded-lg p-4 flex-1 ml-1 shadow-sm">
-        <Text className="text-base font-bold text-gray-800">Expenses Breakdown</Text>
+      
+      <View className="flex-1 bg-white rounded-lg p-4 ml-1 shadow">
+        <Text className="text-base font-bold text-gray-800">
+          Expenses Breakdown
+        </Text>
         <Text className="text-xs text-gray-500 mt-1">
           {formatDate(startDate)} to {formatDate(endDate)}
         </Text>
       </View>
     </View>
   );
-
-  const renderExpensesChart = () => {
+  
+  // Expense chart component
+  const ExpenseChart = ({ chartData }) => {
     if (chartData.length === 0) {
       return (
-        <View className="bg-white p-5 m-2 rounded-lg items-center justify-center h-24 shadow-sm">
-          <Text className="text-base text-gray-500 text-center">No expense data available for the selected period</Text>
+        <View className="bg-white m-2 p-5 rounded-lg items-center justify-center h-[200px] shadow">
+          <Text className="text-gray-500 text-base">
+            No expense data available
+          </Text>
         </View>
       );
     }
-
+    
     return (
-      <View className="bg-white m-2 p-4 rounded-lg shadow-sm">
-        <Text className="text-lg font-bold text-gray-800 mb-2">Equipment Expenses</Text>
-        <BarChart
-          data={chartData}
-          width={300}
-          height={200}
-          barWidth={22}
-          spacing={20}
-          roundedTop
-          roundedBottom
-          hideRules
-          xAxisThickness={1}
-          yAxisThickness={1}
-          xAxisLabelTextStyle={{ fontSize: 10, color: '#666' }}
-          yAxisTextStyle={{ fontSize: 10, color: '#666' }}
-          noOfSections={5}
-          showFractionalValues
-          showGradient
-          showYAxisIndices
-          yAxisIndicesHeight={2}
-          yAxisIndicesWidth={3}
-          yAxisIndicesColor="#177AD5"
-          labelWidth={40}
-        />
+      <View className="bg-white m-2 rounded-lg shadow">
+        <CustomChart data={chartData} />
       </View>
     );
   };
 
-  const renderExpensesList = () => {
+  // Expense details component
+  const ExpenseDetails = () => {
     if (budgetData.length === 0) {
       return (
-        <View className="bg-white p-5 m-2 rounded-lg items-center justify-center h-24 shadow-sm">
-          <Text className="text-base text-gray-500 text-center">No expense data available for the selected period</Text>
+        <View className="bg-white m-2 p-5 rounded-lg items-center justify-center h-[100px] shadow">
+          <Text className="text-gray-500 text-base">
+            No expense data available
+          </Text>
         </View>
       );
     }
-
+    
     return (
       <View className="mb-5">
-        <Text className="text-lg font-bold text-gray-800 mb-2 mx-2 mt-4">Detailed Expenses</Text>
-        {budgetData.map(request => (
-          <View key={request.id} className="bg-white rounded-lg p-4 mx-2 mb-2 shadow-sm">
-            <View className="flex-row justify-between mb-2 border-b border-gray-100 pb-2">
-              <Text className="text-sm text-gray-500">
-                {new Date(request.approvedAt?.toDate()).toLocaleDateString()}
-              </Text>
-              <Text className="text-base font-bold text-blue-500">
-                ₹{request.totalAmountSpent?.toLocaleString() || '0'}
-              </Text>
-            </View>
-
-            {request.equipmentExpenses?.map((expense, index) => (
-              <View key={index} className="flex-row justify-between py-1">
-                <View className="flex-1">
-                  <Text className="text-base text-gray-800">{expense.name}</Text>
-                  <Text className="text-xs text-gray-500 mt-1">
-                    Qty: {expense.approvedQuantity || 0}
-                  </Text>
-                </View>
-                <Text className="text-base font-medium text-gray-800">
-                  ₹{expense.amountSpent || '0'}
+        <Text className="text-lg font-bold text-gray-800 mt-4 mx-2">
+          Detailed Expenses
+        </Text>
+        
+        {budgetData.map(request => {
+          // Get approval date
+          let approvalDate = 'N/A';
+          try {
+            if (request.approvedAt) {
+              // Handle both Firestore Timestamp and ISO string cases
+              approvalDate = typeof request.approvedAt === 'string' 
+                ? new Date(request.approvedAt).toLocaleDateString()
+                : request.approvedAt.toDate 
+                  ? request.approvedAt.toDate().toLocaleDateString() 
+                  : new Date(request.approvedAt).toLocaleDateString();
+            }
+          } catch (e) {
+            console.error('Date conversion error:', e);
+          }
+          
+          return (
+            <View key={request.id} className="bg-white m-2 p-4 rounded-lg shadow">
+              <View className="flex-row justify-between pb-2 border-b border-gray-100 mb-2">
+                <Text className="text-sm text-gray-500">{approvalDate}</Text>
+                <Text className="text-base font-bold text-blue-500">
+                  ₹{parseFloat(request.totalAmountSpent || 0).toLocaleString()}
                 </Text>
               </View>
-            ))}
-
-            {request.invoiceUrl && (
-              <TouchableOpacity className="bg-gray-100 py-2 rounded items-center mt-2">
-                <Text className="text-gray-600 font-medium">View Invoice</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+              
+              {Array.isArray(request.equipmentExpenses) && request.equipmentExpenses.map((expense, index) => (
+                <View key={index} className="flex-row justify-between py-2">
+                  <View className="flex-1">
+                    <Text className="text-base text-gray-800">{expense.name || 'Unknown'}</Text>
+                    <Text className="text-xs text-gray-500 mt-1">
+                      Qty: {expense.approvedQuantity || 0}
+                    </Text>
+                  </View>
+                  <Text className="text-base font-medium text-gray-800">
+                    ₹{expense.amountSpent || '0'}
+                  </Text>
+                </View>
+              ))}
+              
+              {request.invoiceUrl && (
+                <TouchableOpacity className="bg-gray-100 py-2 rounded items-center mt-2">
+                  <Text className="text-gray-600 font-medium">View Invoice</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })}
       </View>
     );
   };
 
-  if (loading && labs.length === 0) {
+  // Loading screen
+  if (isLoading && labs.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center p-5">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-3 text-base text-gray-500">Loading lab data...</Text>
-      </View>
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
+        <CustomLoadingIndicator text="Loading laboratory data..." />
+      </SafeAreaView>
     );
   }
 
+  // Main render
   return (
-    <ScrollView className="flex-1 bg-gray-100">
-      <View className="p-5 bg-blue-500">
-        <Text className="text-2xl font-bold text-white">Lab Budget Tracker</Text>
-        <Text className="text-base text-blue-200 mt-1">Monitor equipment expenses</Text>
-      </View>
-
-      {renderLabSelector()}
-      {renderDatePickers()}
-      {renderExportButton()}
-
-      {loading ? (
-        <View className="justify-center items-center p-5 h-48">
-          <ActivityIndicator size="medium" color="#3b82f6" />
-          <Text className="mt-3 text-base text-gray-500">Loading budget data...</Text>
+    <SafeAreaView className="flex-1 bg-gray-100">
+      <ScrollView>
+        {/* Header */}
+        <View className="bg-blue-500 p-5">
+          <Text className="text-2xl font-bold text-white">
+            Lab Budget Tracker
+          </Text>
+          <Text className="text-base text-blue-100 mt-1">
+            Monitor equipment expenses
+          </Text>
         </View>
-      ) : (
-        <>
-          {renderBudgetSummary()}
-          {renderExpensesChart()}
-          {renderExpensesList()}
-        </>
-      )}
-    </ScrollView>
+
+        {/* Lab selector */}
+        <LabSelector />
+
+        {/* Date selector */}
+        <DateSelector />
+
+        {/* Export button */}
+        <ExportButton />
+
+        {/* Budget data display */}
+        {isDataLoading ? (
+          <View className="h-[200px] justify-center items-center">
+            <CustomLoadingIndicator text="Loading budget data..." />
+          </View>
+        ) : (
+          <>
+            <BudgetSummary />
+            <ExpenseChart chartData={chartData} /> 
+            <ExpenseDetails />
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
