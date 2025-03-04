@@ -59,7 +59,6 @@ const CustomChart = ({ data }) => {
         )}
       </CartesianChart>
 
-      {/* Simple legend */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
         {formattedData.map((item, index) => (
           <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12, marginBottom: 4 }}>
