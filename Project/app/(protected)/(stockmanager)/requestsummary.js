@@ -50,7 +50,6 @@ const RequestSummary = () => {
     }
   }, [requestId]);
 
-  // Fetch inventory data
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -86,7 +85,6 @@ const RequestSummary = () => {
     const numValue = parseInt(value) || 0;
     const maxAvailable = inventory[id]?.quantity || 0;
     
-    // Ensure we don't approve more than available in inventory
     const validatedValue = Math.min(numValue, maxAvailable);
     
     setApprovedQuantities(prev => ({
@@ -105,7 +103,6 @@ const RequestSummary = () => {
         [id]: currentValue + 1
       }));
     } else {
-      // Alert user if trying to exceed available inventory
       Alert.alert('Inventory Limit', `Cannot approve more than ${maxAvailable} units (current inventory)`);
     }
   };
@@ -121,7 +118,6 @@ const RequestSummary = () => {
   };
 
   const validateApproval = () => {
-    // Check if any requested item exceeds available inventory
     for (const item of request.equipment) {
       const inventoryItem = inventory[item.equipmentId];
       if (!inventoryItem) {
@@ -161,11 +157,10 @@ const RequestSummary = () => {
         return;
       }
   
-      // Create new document in 'approvedRequests'
       await addDoc(approvedRef, {
         requestId,
         labId: request.labId,
-        approvedBy: user.uid, // Replace with actual user ID
+        approvedBy: user.uid, 
         approvedAt: new Date().toISOString(),
         equipment: approvedEquipment,
         status: approvedEquipment.length === request.equipment.length ? 'approved' : 'partially approved',
@@ -270,34 +265,36 @@ const RequestSummary = () => {
   };
     
 
-  const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      Alert.alert('Error', 'Please provide a reason for rejection');
-      return;
-    }
+  // const handleReject = async () => {
+  //   if (!rejectionReason.trim()) {
+  //     Alert.alert('Error', 'Please provide a reason for rejection');
+  //     return;
+  //   }
     
-    try {
-      setSubmitting(true);
-      const requestRef = doc(db, 'requests', requestId);
+  //   try {
+  //     setSubmitting(true);
+  //     const requestRef = doc(db, 'requests', requestId);
       
-      await updateDoc(requestRef, {
-        status: 'rejected',
-        rejectionReason,
-        rejectedBy: user.uid, // Replace with actual user ID
-        rejectedAt: new Date().toISOString(),
-      });
+  //     await updateDoc(requestRef, {
+  //       status: 'rejected',
+  //       rejectionReason,
+  //       rejectedBy: user.uid, // Replace with actual user ID
+  //       rejectedAt: new Date().toISOString(),
+  //     });
       
-      Alert.alert('Request Rejected', 'The request has been rejected', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-      Alert.alert('Error', 'Failed to reject request');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  //     Alert.alert('Request Rejected', 'The request has been rejected', [
+  //       { text: 'OK', onPress: () => router.back() }
+  //     ]);
+  //   } catch (error) {
+  //     console.error('Error rejecting request:', error);
+  //     Alert.alert('Error', 'Failed to reject request');
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+  const handleCancel = () =>{
+    router.back();
+  }
   if (loading || inventoryLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">
@@ -436,58 +433,31 @@ const RequestSummary = () => {
                       </View>
                     )}
                     
-                    {request.status === 'rejected' && (
-                      <View className="bg-red-50 p-2 rounded-md">
-                        <Text className="text-red-500 text-sm">
-                          This request was rejected
-                        </Text>
-                      </View>
-                    )}
+                    
                   </View>
                 </View>
               );
             })}
           </View>
           
-          {/* Rejection Reason (if rejected) */}
-          {request.status === 'rejected' && request.rejectionReason && (
-            <View className="p-4 border-t border-gray-200">
-              <Text className="font-semibold text-gray-700 mb-2">Rejection Reason</Text>
-              <Text className="text-gray-600">{request.rejectionReason}</Text>
-            </View>
-          )}
+          
         </View>
         
         {/* Action Buttons for Pending Requests */}
         {request.status === 'pending' && (
           <View className="m-4 mb-8">
-            <View className="bg-white p-4 rounded-xl shadow-sm mb-4">
-              <Text className="font-semibold text-gray-700 mb-2">Rejection Reason (optional)</Text>
-              <TextInput
-                className="border border-gray-300 rounded-md p-3 min-h-24 text-gray-700"
-                placeholder="Provide a reason if you plan to reject this request..."
-                multiline
-                value={rejectionReason}
-                onChangeText={setRejectionReason}
-              />
-            </View>
-            
-            <View className="flex-row justify-between gap-4">
-              <TouchableOpacity
-                className="flex-1 bg-red-500 p-4 rounded-xl flex-row justify-center items-center"
-                onPress={handleReject}
-                disabled={submitting}
+            <View className='flex-row gap-3'>
+            <TouchableOpacity
+                className='flex-1 bg-red-500 p-4 rounded-xl flex-row justify-center items-center'
+                onPress={handleCancel}
               >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Feather name="x" size={20} color="#FFFFFF" />
-                    <Text className="text-white font-medium ml-2">Reject</Text>
-                  </>
-                )}
+                <>
+                  <Feather name='x' size={20} color="#FFFFFF"/>
+                  <Text className='text-white font-medium ml-2'>Cancel</Text>
+                </>
+
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 className="flex-1 bg-green-500 p-4 rounded-xl flex-row justify-center items-center"
                 onPress={handleApprove}
@@ -503,7 +473,8 @@ const RequestSummary = () => {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+              
+            </View>
         )}
       </ScrollView>
     </View>

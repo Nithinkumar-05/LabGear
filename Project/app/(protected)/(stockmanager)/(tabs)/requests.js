@@ -22,15 +22,12 @@ const Requests = () => {
       const requestsRef = collection(db, 'Requests');
       let q;
       
-      // Special handling for the approved tab
       if (status === 'approved') {
-        // Use a compound query to get both approved and partially approved
         q = query(
           requestsRef,
           where('status', 'in', ['approved', 'partially approved'])
         );
       } else {
-        // Normal query for other tabs
         q = query(
           requestsRef,
           where('status', '==', status)
@@ -183,9 +180,7 @@ const Requests = () => {
         {renderTabButton('approved', 'Approved', 
           <MaterialIcons name="check-circle" size={18} color={activeTab === 'approved' ? '#4F46E5' : '#6B7280'} />
         )}
-        {renderTabButton('rejected', 'Rejected', 
-          <MaterialIcons name="cancel" size={18} color={activeTab === 'rejected' ? '#4F46E5' : '#6B7280'} />
-        )}
+        
       </View>
       
       {/* Content */}

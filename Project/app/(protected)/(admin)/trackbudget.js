@@ -5,7 +5,7 @@ import { getDocs, query, where } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
 import CustomChart from '@/components/CustomChart';
-
+import { useRouter } from 'expo-router';
 // Custom loading indicator
 const CustomLoadingIndicator = ({ color = '#3b82f6', text = 'Loading...' }) => (
   <View className="items-center justify-center p-5">
@@ -29,6 +29,7 @@ const Budget = () => {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
 
+  const router = useRouter();
   // Fetch labs on component mount
   useEffect(() => {
     fetchLabs();
@@ -158,24 +159,13 @@ const Budget = () => {
       const chartEntries = Object.keys(equipmentTotals).map((key, index) => ({
         x: key,
         y: equipmentTotals[key],
-        color: getColorForIndex(index)
       }));
 
       setChartData(chartEntries);
-      console.log('Chart data updated:', chartEntries); // Debugging log
     } catch (error) {
       console.error('Error updating chart data:', error);
       setChartData([]);
     }
-  };
-
-  // Get color for chart
-  const getColorForIndex = (index) => {
-    const colors = [
-      '#3366CC', '#DC3912', '#FF9900', '#109618', '#990099',
-      '#3B3EAC', '#0099C6', '#DD4477', '#66AA00', '#B82E2E'
-    ];
-    return colors[index % colors.length];
   };
 
 
@@ -366,7 +356,12 @@ const Budget = () => {
         </View>
       );
     }
-    
+    const handleRequest = (request) =>{
+      router.push({
+      pathname: "/(admin)/invoice",
+        params: { requestId: request.id },
+      })
+    }
     return (
       <View className="mb-5">
         <Text className="text-lg font-bold text-gray-800 mt-4 mx-2">
@@ -412,11 +407,11 @@ const Budget = () => {
                 </View>
               ))}
               
-              {request.invoiceUrl && (
-                <TouchableOpacity className="bg-gray-100 py-2 rounded items-center mt-2">
+                <TouchableOpacity className="bg-gray-100 py-2 rounded items-center mt-2"
+                  onPress={()=>handleRequest(request)}
+                >
                   <Text className="text-gray-600 font-medium">View Invoice</Text>
                 </TouchableOpacity>
-              )}
             </View>
           );
         })}
