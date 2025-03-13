@@ -240,7 +240,7 @@ export default function LabData() {
 
     const handleLabPress = (lab) => {
         router.push({
-            pathname: "/(admin)/labDetails",
+            pathname: "/(admin)/labdetails",
             params: { labId: lab.id }
         });
     };

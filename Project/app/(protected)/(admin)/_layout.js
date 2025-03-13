@@ -74,6 +74,14 @@ const AdminLayout = () => {
           presentation: "containedTransparentModal",
           animation: "slide_from_right"
         }} />
+      <Stack.Screenr
+        name="labdetails"
+        options={{
+          title: "Lab Details",
+          presentation: "fullScreenModal",
+          animation: "slide_from_right"
+        }}
+      />
     </Stack>
   );
 };
