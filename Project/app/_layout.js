@@ -1,11 +1,13 @@
 import { Slot, Stack, useRouter, useSegments } from "expo-router";
+import "@/global.css";
+
 import "../global.css";
 import { View } from "react-native";
 import { useAuth, AuthProvider } from "@/routes/AuthContext";
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { NotificationProvider } from "@/routes/NotificationContext";
-
+import { RefreshProvider } from "@/routes/RefreshContext";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -38,51 +40,48 @@ const MainLayout = () => {
   }, [isAuthenticated, segments]);
 
   return (
-    <View className="flex-1">
-      <Stack>
-        <Stack.Screen
-          name="index"
-          options={{
-            headerShown: false
-          }} />
-        <Stack.Screen
-          name="onboarding"
-          options={{
-            headerShown: false
-          }}
-        />
-        <Stack.Screen
-          name="signIn"
-          options={{
-            headerShown: false, // Hide the header for the login screen
-          }}
-        />
-        <Stack.Screen
-          name="(protected)"
-          options={{
-            headerShown: false, // Hide the header for protected screens
-          }}
-        />
-        <Stack.Screen
-          name="[...missing]"
-          options={{
-            title: "404 Error"
-          }} />
-      </Stack>
-      {/* <Slot/> */}
-    </View>
+    <Stack>
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false
+        }} />
+      <Stack.Screen
+        name="onboarding"
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="signIn"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(protected)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="[...missing]"
+        options={{
+          title: "404 Error"
+        }} />
+    </Stack>
+
   );
 };
 
 export default function RootLayout() {
   return (
-
     <AuthProvider>
-      <NotificationProvider>
-        <MainLayout />
-      </NotificationProvider>
-
-    </AuthProvider>
-    // </NotificationProvider>
+      <RefreshProvider>
+        <NotificationProvider>
+          <MainLayout />
+        </NotificationProvider>
+      </RefreshProvider>
+    </AuthProvider >
   );
 }

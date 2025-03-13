@@ -44,7 +44,7 @@ export default function More() {
       />
       <MenuItem
         iconName={"receipt"}
-        title="Approved Reports"
+        title="Approved Requests"
         onPress={() => navigateToScreen('/(user)/approvedRequests')}
       />
       <SectionTitle title="ACCOUNT" />

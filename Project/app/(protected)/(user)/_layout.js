@@ -17,7 +17,7 @@ const _layout = () => {
       />
       <Stack.Screen
         name="requestsummary"
-        options={{ presentation: "fullScreenModal", title: "RequestSummary", animation: "slide_from_right" }}
+        options={{ presentation: "fullScreenModal", title: "Request Summary", animation: "slide_from_right" }}
       />
       <Stack.Screen
         name="editprofile"
@@ -29,13 +29,26 @@ const _layout = () => {
       />
       <Stack.Screen
         name="approvedRequests"
-        options={{ presentation: "fullScreenModal", title: "Approved Request", animation: "slide_from_right" }}
+        options={{ presentation: "fullScreenModal", title: "Approved Requests", animation: "slide_from_right" }}
       />
       <Stack.Screen
         name="invoice"
         options={{ presentation: "fullScreenModal", title: "Invoice Details", animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="requestform"
+        options={{ presentation: "fullScreenModal", title: "New Request", animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="request-history"
+        options={{ presentation: "fullScreenModal", title: "Requests", animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="labschedule"
+        options={{ presentation: "fullScreenModal", title: "Lab Schedule", animation: "slide_from_right" }}
+      />
     </Stack>
+
 
   );
 };

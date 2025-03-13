@@ -25,13 +25,13 @@ export default function SplashScreen() {
   }
 
   useEffect(() => {
-    // Animate the progress bar over 3 seconds
+    
     Animated.timing(progress, {
       toValue: 1,
       duration: 3000,
       useNativeDriver: false,
     }).start(() => {
-      // Check if onboarding has been completed
+      
       checkOnBoardingStatus();
       router.replace("/signIn");
     });
@@ -42,7 +42,7 @@ export default function SplashScreen() {
       {/* Logo */}
       <Image source={require("../assets/images/lab_gear.jpg")} className="w-52 h-52" />
 
-      {/* Progress Bar */}
+      
       <View className="w-44 h-1 bg-gray-300 mt-4 rounded-full overflow-hidden">
         <Animated.View
           className="h-full bg-black"

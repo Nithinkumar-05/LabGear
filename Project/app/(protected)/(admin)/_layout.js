@@ -18,6 +18,13 @@ const AdminLayout = () => {
         }}
       />
       <Stack.Screen
+        name="invoice"
+        options={{
+          title: "Invoice",
+          presentation: "modal"
+        }}
+      />
+      <Stack.Screen
         name="notifications"
         options={{
           presentation: "fullScreenModal",
@@ -43,6 +50,7 @@ const AdminLayout = () => {
         options={{
           title: "Requests",
           presentation: "modal",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -57,7 +65,15 @@ const AdminLayout = () => {
         options={{
           title: "Track Budget",
           presentation: "fullScreenModal",
-        }}/>
+        }} />
+      <Stack.Screen
+        name="labs"
+        options={{
+          title: "Labs",
+          headerShown: "false",
+          presentation: "containedTransparentModal",
+          animation: "slide_from_right"
+        }} />
     </Stack>
   );
 };

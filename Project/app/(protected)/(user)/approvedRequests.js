@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity,FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { getDocs } from 'firebase/firestore';
 import { approvedRequestsRef } from '@/firebaseConfig';
 import { useEffect, useState } from 'react';
@@ -16,7 +16,7 @@ const ApprovedRequest = () => {
                 const approvedRequestsList = approvedRequestsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                    requestId: doc.id 
+                    requestId: doc.id
                 }));
                 setApprovedRequests(approvedRequestsList);
             } catch (error) {
@@ -25,7 +25,7 @@ const ApprovedRequest = () => {
                 setLoading(false);
             }
         };
-        
+
         fetchApprovedRequests();
     }, []);
 
@@ -33,7 +33,7 @@ const ApprovedRequest = () => {
     const handleRequestPress = (item) => {
         router.push({
             pathname: '/(user)/invoice',
-            params: { 
+            params: {
                 requestId: item.id
             }
         });
@@ -53,16 +53,16 @@ const ApprovedRequest = () => {
         );
     }
 
-    return (  
+    return (
         <View className="flex-1 bg-white">
-            <Text className="text-xl font-bold p-4">Approved Requests</Text>
-            
+
+
             {approvedRequests.length > 0 ? (
                 <FlatList
                     data={approvedRequests}
                     keyExtractor={item => item.id || item.requestId}
                     renderItem={({ item }) => (
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => handleRequestPress(item)}
                             className="px-4 py-4 border-b border-gray-200"
                         >
@@ -70,16 +70,16 @@ const ApprovedRequest = () => {
                                 <Text className="font-semibold">Request #{item.requestId.substring(0, 6)}</Text>
                                 <Text className="text-gray-500">{formatDate(item.approvedAt)}</Text>
                             </View>
-                            
+
                             <Text className="text-gray-600 mb-2">
                                 {item.equipment?.length || 0} item(s) requested
                             </Text>
-                            
+
                             <View className="flex-row justify-between items-center">
                                 <Text className={item.status === "completed" ? "text-green-500" : "text-blue-500"}>
                                     {item.status === "completed" ? "Completed" : "Add Invoice"}
                                 </Text>
-                                
+
                                 {item.totalAmountSpent && (
                                     <Text className="font-bold">
                                         ₹{parseFloat(item.totalAmountSpent).toFixed(2)}
@@ -97,5 +97,5 @@ const ApprovedRequest = () => {
         </View>
     );
 };
- 
+
 export default ApprovedRequest;

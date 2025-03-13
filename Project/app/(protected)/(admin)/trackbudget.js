@@ -1,471 +1,224 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Platform, SafeAreaView } from 'react-native';
-import { db, approvedRequestsRef, labsRef } from '@/firebaseConfig';
-import { getDocs, query, where } from 'firebase/firestore';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import CustomChart from '@/components/CustomChart';
+import { db, requestsRef } from '@/firebaseConfig';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
-// Custom loading indicator
-const CustomLoadingIndicator = ({ color = '#3b82f6', text = 'Loading...' }) => (
-  <View className="items-center justify-center p-5">
-    <Text style={{ color }} className="mb-2">○ ○ ○</Text>
-    <Text className="text-gray-500 text-sm">{text}</Text>
+
+const InsightCard = ({ title, value, subtitle, icon, color = "blue" }) => (
+  <View className={`bg-white p-4 rounded-2xl border-l-4 border-${color}-500`}>
+    <View className="flex-row justify-between items-start">
+      <View className="flex-1">
+        <Text className="text-sm text-gray-600">{title}</Text>
+        <Text className="text-xl font-bold mt-1">
+          {typeof value === 'number' ? `₹${value.toLocaleString()}` : value}
+        </Text>
+        {subtitle && (
+          <Text className="text-xs text-gray-500 mt-1">{subtitle}</Text>
+        )}
+      </View>
+      <View className={`w-10 h-10 rounded-full bg-${color}-50 items-center justify-center`}>
+        <Feather name={icon} size={20} color={`${color === 'blue' ? '#3B82F6' : color === 'green' ? '#10B981' : '#8B5CF6'}`} />
+      </View>
+    </View>
   </View>
 );
 
-const Budget = () => {
-  // State management
-  const [isLoading, setIsLoading] = useState(true);
-  const [labs, setLabs] = useState([]);
-  const [selectedLab, setSelectedLab] = useState(null);
-  const [budgetData, setBudgetData] = useState([]); // Initialize as empty array
-  const [totalSpent, setTotalSpent] = useState(0);
-  const [startDate, setStartDate] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)));
-  const [endDate, setEndDate] = useState(new Date());
-  const [chartData, setChartData] = useState([]);
-  const [isExporting, setIsExporting] = useState(false);
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
-  const [isDataLoading, setIsDataLoading] = useState(false);
+const RequestCard = ({ request, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    className="bg-white p-4 rounded-2xl mb-3"
+  >
+    <View className="flex-row justify-between items-start mb-2">
+      <View className="flex-1">
+        <Text className="font-medium text-gray-900">{request.title}</Text>
+        <Text className="text-sm text-gray-500 mt-1">{request.username}</Text>
+      </View>
+      <Text className="text-blue-500 font-bold">₹{request.totalAmount?.toLocaleString()}</Text>
+    </View>
+    <View className="flex-row items-center mt-2">
+      <View className="flex-row items-center">
+        <Feather name="calendar" size={14} color="#6B7280" />
+        <Text className="text-xs text-gray-500 ml-1">
+          {new Date(request.approvedAt).toLocaleDateString()}
+        </Text>
+      </View>
+      <View className="w-1 h-1 bg-gray-300 rounded-full mx-2" />
+      <View className="flex-row items-center">
+        <Feather name="package" size={14} color="#6B7280" />
+        <Text className="text-xs text-gray-500 ml-1">
+          {request.equipment?.length || 0} items
+        </Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
+const BudgetTracker = () => {
+  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState([]);
+  const [insights, setInsights] = useState({
+    totalSpent: 0,
+    monthlyAverage: 0,
+    topCategory: '',
+    recentTrend: 0,
+    categoryBreakdown: {},
+    monthlyTrend: []
+  });
   const router = useRouter();
-  // Fetch labs on component mount
+
   useEffect(() => {
-    fetchLabs();
+    fetchRequests();
   }, []);
 
-  // Fetch budget data when lab or dates change
-  useEffect(() => {
-    if (selectedLab) {
-      fetchBudgetData();
-    }
-  }, [selectedLab, startDate, endDate]);
-
-  // Update derived data when budget data changes
-  useEffect(() => {
-    if (budgetData && budgetData.length > 0) {
-      updateChartData();
-      updateTotalSpent();
-    } else {
-      setChartData([]);
-      setTotalSpent(0);
-    }
-  }, [budgetData]);
-
-  // Function to fetch labs
-  const fetchLabs = async () => {
+  const fetchRequests = async () => {
     try {
-      const snapshot = await getDocs(labsRef);
-      if (!snapshot.empty) {
-        const labList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setLabs(labList);
-        if (labList.length > 0) {
-          setSelectedLab(labList[0]);
-        }
-      } else {
-        setLabs([]);
-      }
-    } catch (error) {
-      console.error('Error fetching labs:', error);
-      Alert.alert('Error', 'Failed to load laboratory data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to fetch budget data
-  const fetchBudgetData = async () => {
-    if (!selectedLab || !selectedLab.id) return;
-
-    setIsDataLoading(true);
-
-    try {
-      const correctLabId = selectedLab.id;
-      const startISO = startDate.toISOString();
-      const endISO = endDate.toISOString();
-
-      const budgetQuery = query(
-        approvedRequestsRef,
-        where('labId', '==', correctLabId),
-        where('approvedAt', '>=', startISO),
-        where('approvedAt', '<=', endISO)
+      const q = query(
+        collection(db, 'Requests'),
+        where('status', '==', 'approved'),
+        orderBy('approvedAt', 'desc')
       );
-
-      const snapshot = await getDocs(budgetQuery);
-
-      if (!snapshot.empty) {
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setBudgetData(data);
-      } else {
-        setBudgetData([]); // Set to empty array if no data is found
-      }
-    } catch (error) {
-      console.error('Error fetching budget data:', error);
-      Alert.alert('Error', 'Failed to load budget data');
-      setBudgetData([]); // Set to empty array on error
-    } finally {
-      setIsDataLoading(false);
-    }
-  };
-
-  // Function to calculate total spent
-  const updateTotalSpent = () => {
-    try {
-      if (!Array.isArray(budgetData)) {
-        console.warn('budgetData is not an array:', budgetData);
-        setTotalSpent(0);
-        return;
-      }
-
-      const total = budgetData.reduce((sum, item) => {
-        const amount = parseFloat(item.totalAmountSpent || 0);
-        return sum + (isNaN(amount) ? 0 : amount);
-      }, 0);
-
-      setTotalSpent(total);
-    } catch (error) {
-      console.error('Error calculating total:', error);
-      setTotalSpent(0);
-    }
-  };
-
-  // Function to update chart data
-  const updateChartData = () => {
-    try {
-      const equipmentTotals = {};
-
-      budgetData.forEach(request => {
-        if (request.equipmentExpenses && Array.isArray(request.equipmentExpenses)) {
-          request.equipmentExpenses.forEach(expense => {
-            if (expense && expense.name) {
-              const name = expense.name;
-              const amount = parseFloat(expense.amountSpent || 0);
-
-              if (!isNaN(amount)) {
-                equipmentTotals[name] = (equipmentTotals[name] || 0) + amount;
-              }
-            }
-          });
-        }
-      });
-
-      const chartEntries = Object.keys(equipmentTotals).map((key, index) => ({
-        x: key,
-        y: equipmentTotals[key],
+      const querySnapshot = await getDocs(q);
+      const requestsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
       }));
-
-      setChartData(chartEntries);
+      setRequests(requestsData);
+      calculateInsights(requestsData);
     } catch (error) {
-      console.error('Error updating chart data:', error);
-      setChartData([]);
+      console.error('Error fetching requests:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const calculateInsights = (requestsData) => {
+    // Total spent
+    const totalSpent = requestsData.reduce((sum, req) => sum + (req.totalAmount || 0), 0);
 
+    // Monthly breakdown
+    const monthlySpending = {};
+    requestsData.forEach(req => {
+      const month = new Date(req.approvedAt).toLocaleString('default', { month: 'short' });
+      monthlySpending[month] = (monthlySpending[month] || 0) + (req.totalAmount || 0);
+    });
 
+    // Category breakdown
+    const categorySpending = {};
+    requestsData.forEach(req => {
+      req.equipment?.forEach(item => {
+        categorySpending[item.type] = (categorySpending[item.type] || 0) +
+          (parseFloat(item.amountSpent) || 0);
+      });
+    });
 
-    // Format date for display
-  const formatDate = (date) => {
-    try {
-      if (!date) return 'N/A';
-      return new Date(date).toLocaleDateString();
-    } catch (error) {
-      return 'Invalid Date';
-    }
+    // Calculate monthly average
+    const months = Object.keys(monthlySpending).length;
+    const monthlyAverage = months > 0 ? totalSpent / months : 0;
+
+    // Calculate trend (comparing last two months)
+    const sortedMonths = Object.entries(monthlySpending)
+      .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+    const recentTrend = sortedMonths.length >= 2
+      ? ((sortedMonths[0][1] - sortedMonths[1][1]) / sortedMonths[1][1]) * 100
+      : 0;
+
+    // Find top category
+    const topCategory = Object.entries(categorySpending)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+
+    setInsights({
+      totalSpent,
+      monthlyAverage,
+      topCategory,
+      recentTrend,
+      categoryBreakdown: categorySpending,
+      monthlyTrend: Object.entries(monthlySpending)
+    });
   };
 
-  const handleDateChange = (event, date, isStart) => {
-    if (Platform.OS === 'android') {
-      setShowStartPicker(false);
-      setShowEndPicker(false);
-    }
-    
-    if (event.type === 'set' && date) {
-      if (isStart) {
-        setStartDate(date);
-      } else {
-        setEndDate(date);
-      }
-    }
-    
-    if (Platform.OS === 'ios' && event.type === 'set') {
-      if (isStart) {
-        setShowStartPicker(false);
-      } else {
-        setShowEndPicker(false);
-      }
-    }
-  };
-
-  const handleExport = () => {
-    if (budgetData.length === 0) {
-      Alert.alert('No Data', 'There is no data to export for the selected period');
-      return;
-    }
-    
-    setIsExporting(true);
-    
-    setTimeout(() => {
-      Alert.alert('Export', 'Budget data exported successfully');
-      setIsExporting(false);
-    }, 1500);
-  };
-
-  
-
-  
-
-  // Lab selector component
-  const LabSelector = () => (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ padding: 8 }}
-      className="bg-white border-b border-gray-200"
-    >
-      {labs.map(lab => (
-        <TouchableOpacity
-          key={lab.id}
-          className={`px-2.5 py-2.5 mx-1 ${selectedLab?.id === lab.id ? 'bg-blue-50 border border-blue-500' : 'bg-gray-100 border-0 border-transparent'} rounded-lg min-w-[100px] items-center`}
-          onPress={() => setSelectedLab(lab)}
-        >
-          <Text className="font-semibold text-base">{lab.labName}</Text>
-          <Text className="text-gray-500 text-xs mt-1">{lab.department}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
-
-  // Date range selector component
-  const DateSelector = () => (
-    <View className="flex-row m-2 bg-white rounded-lg p-3 shadow">
-      <View className="flex-1 mr-2">
-        <Text className="text-gray-500 mb-1 text-sm">Start Date:</Text>
-        <TouchableOpacity
-          className="bg-gray-100 p-2 rounded border border-gray-300"
-          onPress={() => setShowStartPicker(true)}
-        >
-          <Text>{formatDate(startDate)}</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View className="flex-1 ml-2">
-        <Text className="text-gray-500 mb-1 text-sm">End Date:</Text>
-        <TouchableOpacity
-          className="bg-gray-100 p-2 rounded border border-gray-300"
-          onPress={() => setShowEndPicker(true)}
-        >
-          <Text>{formatDate(endDate)}</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Date Pickers */}
-      {showStartPicker && (
-        <DateTimePicker
-          testID="startDatePicker"
-          value={startDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(e, d) => handleDateChange(e, d, true)}
-        />
-      )}
-      
-      {showEndPicker && (
-        <DateTimePicker
-          testID="endDatePicker"
-          value={endDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(e, d) => handleDateChange(e, d, false)}
-        />
-      )}
-    </View>
-  );
-
-  // Export button component
-  const ExportButton = () => (
-    <TouchableOpacity
-      className={`${isExporting ? 'bg-lime-700' : 'bg-lime-500'} m-2 rounded-lg p-3 flex-row justify-center items-center ${budgetData.length === 0 ? 'opacity-50' : 'opacity-100'}`}
-      onPress={handleExport}
-      disabled={isExporting || budgetData.length === 0}
-    >
-      <Feather name="download" size={18} color="white" />
-      <Text className="text-white font-semibold ml-2">
-        {isExporting ? 'Exporting...' : 'Export to Excel'}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  // Budget summary component
-  const BudgetSummary = () => (
-    <View className="flex-row m-2">
-      <View className="flex-1 bg-blue-500 rounded-lg p-4 mr-1 shadow">
-        <Text className="text-xl font-bold text-white">
-          ₹{totalSpent.toLocaleString()}
-        </Text>
-        <Text className="text-sm text-blue-100 mt-1">
-          Total Budget Spent
-        </Text>
-      </View>
-      
-      <View className="flex-1 bg-white rounded-lg p-4 ml-1 shadow">
-        <Text className="text-base font-bold text-gray-800">
-          Expenses Breakdown
-        </Text>
-        <Text className="text-xs text-gray-500 mt-1">
-          {formatDate(startDate)} to {formatDate(endDate)}
-        </Text>
-      </View>
-    </View>
-  );
-  
-  // Expense chart component
-  const ExpenseChart = ({ chartData }) => {
-    if (chartData.length === 0) {
-      return (
-        <View className="bg-white m-2 p-5 rounded-lg items-center justify-center h-[200px] shadow">
-          <Text className="text-gray-500 text-base">
-            No expense data available
-          </Text>
-        </View>
-      );
-    }
-    
+  if (loading) {
     return (
-      <View className="bg-white m-2 rounded-lg shadow">
-        <CustomChart data={chartData} />
-      </View>
-    );
-  };
-
-  // Expense details component
-  const ExpenseDetails = () => {
-    if (budgetData.length === 0) {
-      return (
-        <View className="bg-white m-2 p-5 rounded-lg items-center justify-center h-[100px] shadow">
-          <Text className="text-gray-500 text-base">
-            No expense data available
-          </Text>
-        </View>
-      );
-    }
-    const handleRequest = (request) =>{
-      router.push({
-      pathname: "/(admin)/invoice",
-        params: { requestId: request.id },
-      })
-    }
-    return (
-      <View className="mb-5">
-        <Text className="text-lg font-bold text-gray-800 mt-4 mx-2">
-          Detailed Expenses
-        </Text>
-        
-        {budgetData.map(request => {
-          // Get approval date
-          let approvalDate = 'N/A';
-          try {
-            if (request.approvedAt) {
-              // Handle both Firestore Timestamp and ISO string cases
-              approvalDate = typeof request.approvedAt === 'string' 
-                ? new Date(request.approvedAt).toLocaleDateString()
-                : request.approvedAt.toDate 
-                  ? request.approvedAt.toDate().toLocaleDateString() 
-                  : new Date(request.approvedAt).toLocaleDateString();
-            }
-          } catch (e) {
-            console.error('Date conversion error:', e);
-          }
-          
-          return (
-            <View key={request.id} className="bg-white m-2 p-4 rounded-lg shadow">
-              <View className="flex-row justify-between pb-2 border-b border-gray-100 mb-2">
-                <Text className="text-sm text-gray-500">{approvalDate}</Text>
-                <Text className="text-base font-bold text-blue-500">
-                  ₹{parseFloat(request.totalAmountSpent || 0).toLocaleString()}
-                </Text>
-              </View>
-              
-              {Array.isArray(request.equipmentExpenses) && request.equipmentExpenses.map((expense, index) => (
-                <View key={index} className="flex-row justify-between py-2">
-                  <View className="flex-1">
-                    <Text className="text-base text-gray-800">{expense.name || 'Unknown'}</Text>
-                    <Text className="text-xs text-gray-500 mt-1">
-                      Qty: {expense.approvedQuantity || 0}
-                    </Text>
-                  </View>
-                  <Text className="text-base font-medium text-gray-800">
-                    ₹{expense.amountSpent || '0'}
-                  </Text>
-                </View>
-              ))}
-              
-                <TouchableOpacity className="bg-gray-100 py-2 rounded items-center mt-2"
-                  onPress={()=>handleRequest(request)}
-                >
-                  <Text className="text-gray-600 font-medium">View Invoice</Text>
-                </TouchableOpacity>
-            </View>
-          );
-        })}
-      </View>
-    );
-  };
-
-  // Loading screen
-  if (isLoading && labs.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
-        <CustomLoadingIndicator text="Loading laboratory data..." />
+      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="text-gray-600 mt-4">Loading budget data...</Text>
       </SafeAreaView>
     );
   }
 
-  // Main render
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <ScrollView>
-        {/* Header */}
-        <View className="bg-blue-500 p-5">
-          <Text className="text-2xl font-bold text-white">
-            Lab Budget Tracker
-          </Text>
-          <Text className="text-base text-blue-100 mt-1">
-            Monitor equipment expenses
-          </Text>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white px-6 py-4">
+        <Text className="text-2xl font-bold text-gray-900">Budget Tracker</Text>
+        <Text className="text-gray-500">Monitor and analyze expenses</Text>
+      </View>
+
+      <ScrollView className="flex-1 p-4">
+        {/* Key Metrics */}
+        <View className="space-y-3 mb-6">
+          <InsightCard
+            title="Total Budget Spent"
+            value={insights.totalSpent}
+            subtitle={`${insights.recentTrend > 0 ? '↑' : '↓'} ${Math.abs(insights.recentTrend).toFixed(1)}% vs last month`}
+            icon="dollar-sign"
+            color="blue"
+          />
+          <InsightCard
+            title="Monthly Average"
+            value={insights.monthlyAverage}
+            subtitle="Based on approved requests"
+            icon="trending-up"
+            color="green"
+          />
+          <InsightCard
+            title="Top Expense Category"
+            value={insights.topCategory || 'N/A'}
+            subtitle="Highest spending category"
+            icon="pie-chart"
+            color="purple"
+          />
         </View>
 
-        {/* Lab selector */}
-        <LabSelector />
+        {/* Category Breakdown */}
+        <View className="bg-white rounded-2xl p-4 mb-6">
+          <Text className="text-lg font-bold text-gray-900 mb-4">Category Breakdown</Text>
+          {Object.entries(insights.categoryBreakdown).map(([category, amount]) => (
+            <View key={category} className="mb-3">
+              <View className="flex-row justify-between mb-1">
+                <Text className="text-gray-600 capitalize">{category}</Text>
+                <Text className="font-medium">₹{amount.toLocaleString()}</Text>
+              </View>
+              <View className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <View
+                  className="h-full bg-blue-500 rounded-full"
+                  style={{
+                    width: `${(amount / insights.totalSpent) * 100}%`
+                  }}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
 
-        {/* Date selector */}
-        <DateSelector />
-
-        {/* Export button */}
-        <ExportButton />
-
-        {/* Budget data display */}
-        {isDataLoading ? (
-          <View className="h-[200px] justify-center items-center">
-            <CustomLoadingIndicator text="Loading budget data..." />
-          </View>
-        ) : (
-          <>
-            <BudgetSummary />
-            <ExpenseChart chartData={chartData} /> 
-            <ExpenseDetails />
-          </>
-        )}
+        {/* Recent Requests */}
+        <View className="mb-6">
+          <Text className="text-lg font-bold text-gray-900 mb-4">Recent Approvals</Text>
+          {requests.map(request => (
+            <RequestCard
+              key={request.id}
+              request={request}
+              onPress={() => router.push({
+                pathname: "/(admin)/invoice",
+                params: { requestId: request.id }
+              })}
+            />
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Budget;
+export default BudgetTracker;

@@ -1,16 +1,61 @@
-import { View, Text, TouchableOpacity,ScrollView, RefreshControl, ActivityIndicator,Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, where, getDoc } from 'firebase/firestore';
 import Search from '@/components/SearchBar';
 import { db } from '@/firebaseConfig';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Avatar from '@/components/AvatarGenerator';
+
+const UserCard = ({ user, onPress }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        className="bg-white rounded-2xl shadow-sm mb-4 overflow-hidden"
+        activeOpacity={0.7}
+    >
+        <View className="p-4">
+            <View className="flex-row items-center space-x-4">
+                {user.personal.profileImgUrl ? (
+                    <Image
+                        source={{ uri: user.personal.profileImgUrl }}
+                        className="w-16 h-16 rounded-2xl"
+                        contentFit="cover"
+                    />
+                ) : (
+                    <Avatar name={user.personal?.name} size={64} />
+                )}
+                <View className="flex-1">
+                    <Text className="text-lg font-semibold text-gray-900">
+                        {user.personal?.name}
+                    </Text>
+                    {user.labInfo && (
+                        <View className="mt-1">
+                            <Text className="text-sm text-gray-500">
+                                {user.labInfo.labName}
+                            </Text>
+                            <View className="flex-row items-center mt-1">
+                                <MaterialCommunityIcons name="office-building-marker" size={14} color="#6b7280" />
+                                <Text className="text-xs text-gray-500 ml-1">
+                                    {user.labInfo.department}
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+                </View>
+                <View className="bg-blue-50 p-2 rounded-full">
+                    <Ionicons name="chevron-forward" size={20} color="#3b82f6" />
+                </View>
+            </View>
+        </View>
+    </TouchableOpacity>
+);
+
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -72,97 +117,73 @@ const Users = () => {
     if (loading) {
         return (
             <View className="flex-1 justify-center items-center bg-gray-50">
-                <ActivityIndicator size="large" color="#0284c7" />
+                <ActivityIndicator size="large" color="#3b82f6" />
             </View>
         );
     }
-    
+
     return (
-        <ScrollView
-            className="flex-1 bg-gray-100"
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-        >
-            {/* Header */}
-            <View className="px-4 pt-6 pb-4 shadow-sm">
-                <Text className="text-3xl font-bold text-gray-800">
-                    Lab Programmers
-                </Text>
-                <Text className="text-sm text-gray-500 mt-1">
-                    Manage and monitor lab programmer profiles
-                </Text>
-                <View className="mt-4 flex-row items-center">
-                    <Search
-                        placeholder="Search by name..."
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        height={hp(6)}
-                        width={wp(80)}
-                    />
+        <View className="flex-1 bg-gray-50">
+            {/* Fixed Header */}
+            <View className="bg-white px-6 pt-6 pb-4 shadow-sm">
+                <View className="flex-row items-center justify-between mb-6">
+                    <View>
+                        <Text className="text-2xl font-bold text-gray-900">
+                            Lab Programmers
+                        </Text>
+                        <Text className="text-sm text-gray-500 mt-1">
+                            {filteredUsers.length} active members
+                        </Text>
+                    </View>
                     <TouchableOpacity
-                        className="bg-blue-500 w-12 h-12 rounded-full shadow-lg items-center justify-center right-12 bottom-2 active:bg-blue-600"
                         onPress={() => router.push('/(admin)/add-user')}
+                        className="bg-blue-500 w-12 h-12 rounded-full items-center justify-center shadow-lg active:bg-blue-600"
                     >
-                        <Text className="text-white text-2xl font-semibold">+</Text>
+                        <Ionicons name="add" size={24} color="white" />
                     </TouchableOpacity>
                 </View>
+
+                <Search
+                    placeholder="Search programmers..."
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    height={hp(5.5)}
+                    width={wp(88)}
+                />
             </View>
 
-            {/* Users List */}
-            <View className="px-2 py-2">
+            {/* Scrollable Content */}
+            <ScrollView
+                className="flex-1 px-6 pt-4"
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                showsVerticalScrollIndicator={false}
+            >
                 {filteredUsers.length > 0 ? (
-                    <View className="space-y-3">
-                        {filteredUsers.map(user => (
-                            <TouchableOpacity
-                                key={user.id}
-                                onPress={() => navigateToUserDetails(user)}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-2"
-                                activeOpacity={0.7}
-                            >
-                                <View className="p-4 flex-row items-center space-x-4 gap-3">
-
-                                {user.personal.profileImgUrl ? (
-                                        <Image
-                                            source={{ uri: user.personal.profileImgUrl }}
-                                            className="w-14 h-14 rounded-full"
-                                            contentFit="cover"
-                                        />
-                                    ) : (
-                                        <Avatar name={user.personal?.name} size={50} />
-                                    )}
-                                    <View className="flex-1">
-                                        <View className="flex-row items-center justify-between">
-                                            <Text className="text-lg font-semibold text-gray-800">
-                                                {user.personal?.name}
-                                            </Text>
-
-                                        </View>
-
-                                        {user.labInfo && (
-                                            <View className="flex-row items-center mt-2">
-                                                <Ionicons name="flask-outline" size={14} color="#6b7280" />
-                                                <Text className="text-xs text-gray-500 ml-1">
-                                                    {user.labInfo.labName} • {user.labInfo.department}
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                    filteredUsers.map(user => (
+                        <UserCard
+                            key={user.id}
+                            user={user}
+                            onPress={() => navigateToUserDetails(user)}
+                        />
+                    ))
                 ) : (
-                    <View className="flex-1 items-center justify-center py-12">
-                        <Ionicons name="search-outline" size={48} color="#9ca3af" />
-                        <Text className="text-gray-500 text-center mt-4">
-                            No programmers found matching your search.
+                    <View className="flex-1 items-center justify-center py-20">
+                        <View className="bg-gray-100 rounded-full p-4 mb-4">
+                            <Ionicons name="search" size={32} color="#9ca3af" />
+                        </View>
+                        <Text className="text-gray-600 text-lg font-medium">
+                            No results found
+                        </Text>
+                        <Text className="text-gray-400 text-center mt-2 px-6">
+                            We couldn't find any programmers matching your search criteria
                         </Text>
                     </View>
                 )}
-            </View>
-        </ScrollView>
+                <View className="h-6" />
+            </ScrollView>
+        </View>
     );
 };
 

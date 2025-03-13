@@ -1,301 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal, ActivityIndicator } from 'react-native';
-import { useAuth } from '@/routes/AuthContext';
-import { componentsRef, requestsRef } from '@/firebaseConfig';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import { AntDesign } from '@expo/vector-icons';
-import EquipmentSection from '@/components/EquipmentSection';
-import { useRouter } from 'expo-router';
-import useLabDetails from '@/utils/LabDetails';
+import { useEffect } from "react";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { Avatar, Button, Card, Chip } from "react-native-paper";
+import { useRefresh } from "@/routes/RefreshContext";
+import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+
+const QuickActionButton = ({ icon, title, subtitle, onPress }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        className="bg-white rounded-3xl p-5 flex-row items-center border border-gray-100 shadow-sm"
+    >
+        <View className="w-14 h-14 rounded-2xl bg-blue-500 items-center justify-center">
+            <Feather name={icon} size={24} color="white" />
+        </View>
+        <View className="flex-1 ml-4">
+            <Text className="text-gray-900 font-semibold text-lg">{title}</Text>
+            {subtitle && <Text className="text-gray-500 text-sm mt-0.5">{subtitle}</Text>}
+        </View>
+        <View className="w-8 h-8 rounded-full bg-gray-50 items-center justify-center">
+            <Feather name="chevron-right" size={20} className="text-gray-400" />
+        </View>
+    </TouchableOpacity>
+);
+
+const StatCard = ({ label, value, icon, bgColor, textColor }) => (
+    <View className={`${bgColor} rounded-2xl p-4 flex-1 mx-1.5`}>
+        <View className="flex-row items-center justify-between mb-2">
+            <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center">
+                <Feather name={icon} size={20} color="white" />
+            </View>
+            <Text className="text-white text-2xl font-bold">{value}</Text>
+        </View>
+        <Text className="text-white/90 text-sm font-medium">{label}</Text>
+    </View>
+);
+
+const InventoryItem = ({ item, onPress }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        className="flex-row items-center justify-between py-4 border-b border-gray-100 last:border-b-0"
+    >
+        <View className="flex-row items-center">
+            <View className="w-12 h-12 rounded-2xl bg-gray-100 items-center justify-center">
+                <Feather name="box" size={20} className="text-gray-600" />
+            </View>
+            <View className="ml-3">
+                <Text className="text-gray-900 font-semibold">{item.name}</Text>
+                <Text className="text-gray-500 text-sm">{item.model}</Text>
+            </View>
+        </View>
+        <View className="flex-row items-center">
+            <View className="bg-red-50 px-3 py-1.5 rounded-full flex-row items-center">
+                <Feather name="alert-circle" size={14} className="text-red-500 mr-1" />
+                <Text className="text-red-500 font-medium">{item.stock}</Text>
+            </View>
+        </View>
+    </TouchableOpacity>
+);
+
 const Home = () => {
-    const { user, loading } = useAuth();
-    const [activeTab, setActiveTab] = useState('available');
-    const [equipment, setEquipment] = useState({ consumable: [], nonConsumable: [] });
-    const [requests, setRequests] = useState([]);
-    const [cart, setCart] = useState([]);
-    const [showCart, setShowCart] = useState(false);
-    const { getSpecificLab } = useLabDetails();
+    const { data, loading, refreshData } = useRefresh();
     const router = useRouter();
 
     useEffect(() => {
-        fetchEquipment();
-        if (user?.uid) fetchRequests();
-    }, [user]);
+        refreshData();
+    }, []);
 
-    const fetchEquipment = async () => {
-        try {
-            const equipmentSnap = await getDocs(componentsRef);
-            const items = equipmentSnap.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            setEquipment({
-                consumable: items.filter(item => item.type === 'consumable'),
-                nonConsumable: items.filter(item => item.type === 'non-consumable')
-            });
-        } catch (error) {
-            console.error('Error fetching equipment:', error);
-        }
-    };
-
-    const fetchRequests = async () => {
-        try {
-            const q = query(requestsRef, where('labId', '==', user.labDetails.labId));
-            const requestSnap = await getDocs(q);
-            setRequests(requestSnap.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })));
-        } catch (error) {
-            console.error('Error fetching requests:', error);
-        }
-    };
-
-    const handleRequestPress = (request) => {
-        router.push({
-            pathname: "/(user)/requestsummary",
-            params: { requestId: request.id }
-        });
-    };
-
-    const addToCart = (item) => {
-        const existingItem = cart.find(i => i.id === item.id);
-        if (existingItem) {
-            setCart(cart.map(i =>
-                i.id === item.id
-                    ? { ...i, quantity: Math.min(item.quantity, i.quantity + 1) }
-                    : i
-            ));
-        } else {
-            setCart([...cart, { ...item, quantity: 1 }]);
-        }
-    };
-
-    const updateCartQuantity = (itemId, increment) => {
-        setCart(cart.map(item => {
-            if (item.id === itemId) {
-                const maxQuantity = [...equipment.consumable, ...equipment.nonConsumable]
-                    .find(e => e.id === itemId).quantity;
-                const newQuantity = increment
-                    ? Math.min(item.quantity + 1, maxQuantity)
-                    : Math.max(1, item.quantity - 1);
-                return { ...item, quantity: newQuantity };
-            }
-            return item;
-        }));
-    };
-
-    const removeFromCart = (itemId) => {
-        setCart(cart.filter(item => item.id !== itemId));
-    };
-
-    const submitRequest = async () => {
-        if (cart.length === 0) return;
-        const lab = await getSpecificLab(user.labDetails.labRef);
-        try {
-            const requestData = {
-                userId: user.uid,
-                lab:lab,
-                labId: user.labDetails.labId,
-                username: user.personal.name, 
-                equipment: cart.map(item => ({
-                    img:item.imageUrl,
-                    equipmentId: item.id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    type: item.type
-                })),
-                status: 'pending',
-                createdAt: serverTimestamp(),
-            };
-
-            await addDoc(requestsRef, requestData);
-            setCart([]);
-            setShowCart(false);
-            fetchRequests();
-        } catch (error) {
-            console.error('Error submitting request:', error);
-        }
-    };
-
-    if (loading) {
-        return (
-            <View className="flex-1 justify-center items-center bg-gray-50">
-                <ActivityIndicator size="large" color="#4F46E5" />
-            </View>
-        );
-    }
+    const pendingRequests = data.requests?.filter(req => req.status === "pending").length || 0;
+    const approvedRequests = data.requests?.filter(req => req.status === "approved").length || 0;
 
     return (
-        <View className="flex-1 bg-gray-50">
-            <View className="bg-white p-6">
-                <View className="flex-col">
-                    <View className="flex-row justify-between items-center">
-                        <View>
+        <ScrollView
+            className="flex-1 bg-gray-50"
+            refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshData} />}
+            contentContainerClassName="pb-8"
+        >
+            {/* Header Section */}
+            <View className="bg-white px-6 pt-14 pb-6">
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <View className="relative">
+                            <Avatar.Image
+                                size={56}
+                                source={{ uri: data.user?.personal.profileImgUrl || undefined }}
+                                className="bg-blue-50"
+                            />
+                            <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-400 rounded-full border-2 border-white" />
+                        </View>
+                        <View className="ml-4">
                             <Text className="text-2xl font-bold text-gray-900">
-                                Welcome, {user?.personal?.name || 'User'} 
+                                {data.user?.personal?.name || "Welcome Back"}
                             </Text>
-                            <Text className="text-sm text-gray-600 mt-1">
-                                {user?.professional?.designation || 'Lab Programmer'} 
-                            </Text>
+                            <Text className="text-gray-500 font-medium">Lab Programmer</Text>
                         </View>
                     </View>
+
                 </View>
             </View>
 
-            <View className="flex-row bg-white border-b border-gray-200">
-                <TouchableOpacity
-                    className={`flex-1 py-4 items-center ${activeTab === 'available' ? 'border-b-2 border-blue-500' : ''}`}
-                    onPress={() => setActiveTab('available')}
-                >
-                    <Text className={activeTab === 'available' ? 'text-blue-500 font-medium' : 'text-gray-500'}>
-                        Available Equipment
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    className={`flex-1 py-4 items-center ${activeTab === 'requests' ? 'border-b-2 border-blue-500' : ''}`}
-                    onPress={() => setActiveTab('requests')}
-                >
-                    <Text className={activeTab === 'requests' ? 'text-blue-500 font-medium' : 'text-gray-500'}>
-                        My Requests
-                    </Text>
-                </TouchableOpacity>
+            {/* Stats Cards */}
+            <View className="px-6 py-6">
+                <View className="flex-row">
+                    <StatCard
+                        label="Pending Requests"
+                        value={pendingRequests}
+                        icon="clock"
+                        bgColor="bg-amber-500"
+                        textColor="text-amber-50"
+                    />
+                    <StatCard
+                        label="Approved Requests"
+                        value={approvedRequests}
+                        icon="check-circle"
+                        bgColor="bg-blue-500"
+                        textColor="text-blue-50"
+                    />
+                    <TouchableOpacity
+                        className="flex-row items-center border border-1 border-blue-500 rounded-2xl p-4 bg-blue-100"
+                        onPress={() => router.push("(user)/request-history")}
+                    >
+                        <Text className=" font-medium mr-1 text-blue-500">View All</Text>
+                        <Feather name="arrow-right" color={"#3b82f6"} size={16} className="text-blue-500" />
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            <ScrollView className="flex-1 p-4">
-                {activeTab === 'available' ? (
-
-                    <View>
-                        <View className="flex-row justify-end">
-                            <TouchableOpacity
-                                className="relative p-3 bg-blue-600 rounded-full shadow-lg"
-                                onPress={() => setShowCart(true)}
-                            >
-                                <AntDesign name="shoppingcart" size={24} color={"#fff"} />
-
-                                {cart.length > 0 && (
-                                    <View className="absolute -top-2 -right-2 bg-red-600 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
-                                        <Text className="text-white text-xs font-bold">{cart.length}</Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                        <EquipmentSection
-                            title="Non-Consumable Equipment"
-                            items={equipment.nonConsumable}
-                            addToCart={addToCart}
-                        />
-                        <EquipmentSection
-                            title="Consumable Equipment"
-                            items={equipment.consumable}
-                            addToCart={addToCart}
-                        />
-                    </View>
-                ) : (
-                    <View className="space-y-4">
-                        {requests && requests.length > 0 ? (
-                            requests.map((request) => (
-                                <TouchableOpacity
-                                    key={request.id}
-                                    className="bg-white p-4 rounded-lg shadow mb-2"
-                                    onPress={() => handleRequestPress(request)}
-                                >
-                                    <View className="space-y-2">
-                                        <View className="flex-row justify-between items-center">
-                                            <Text className="text-lg font-semibold">
-                                                Request #{request.id.slice(0, 6)}
-                                            </Text>
-                                            <View className={`px-3 py-1 rounded-full ${request.status === 'approved'|| request.status ==='partially approved' ? 'bg-green-100' : 'bg-yellow-100'
-                                                }`}>
-                                                <Text className={`text-sm font-medium ${request.status === 'approved' ? 'text-green-800' : 'text-yellow-800'
-                                                    }`}>
-                                                    {request.status}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                        {request.equipment.map((item, index) => (
-                                            <Text key={index} className="text-gray-600">
-                                                {item.name} - Qty: {item.quantity} ({item.type})
-                                            </Text>
-                                        ))}
-                                        <Text className="text-sm text-gray-500">
-                                            Requested: {new Date(request.createdAt?.toDate()).toLocaleDateString()}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            ))
-                        ) : (
-                            <View className="flex-1 justify-center items-center py-4">
-                                <Text className="text-gray-500">No requests available</Text>
-                            </View>
-                        )}
-                    </View>
-                )}
-            </ScrollView>
-
-            <Modal visible={showCart} transparent animationType="slide">
-                <View className="flex-1 justify-end">
-                    <View className="bg-white p-6 rounded-t-3xl shadow-lg">
-                        <Text className="text-xl font-bold mb-4">Request Cart</Text>
-                        {
-                            cart.length == 0 ? <Text>No Equipment is selected</Text>
-                                : (
-                                    <ScrollView className="max-h-96">
-                                        {cart.map((item) => (
-                                            <View key={item.id} className="flex-row items-center justify-between py-2 border-b border-gray-200">
-                                                <View>
-                                                    <Text className="font-medium">{item.name}</Text>
-                                                    <Text className="text-sm text-gray-500">{item.type}</Text>
-                                                </View>
-                                                <View className="flex-row items-center">
-                                                    <TouchableOpacity
-                                                        className="bg-gray-200 p-2 rounded-lg"
-                                                        onPress={() => updateCartQuantity(item.id, false)}
-                                                    >
-                                                        <Text className="font-bold">-</Text>
-                                                    </TouchableOpacity>
-                                                    <Text className="mx-4">{item.quantity}</Text>
-                                                    <TouchableOpacity
-                                                        className="bg-gray-200 p-2 rounded-lg"
-                                                        onPress={() => updateCartQuantity(item.id, true)}
-                                                    >
-                                                        <Text className="font-bold">+</Text>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity
-                                                        className="ml-4 bg-red-100 p-2 rounded-lg"
-                                                        onPress={() => removeFromCart(item.id)}
-                                                    >
-                                                        <Text className="text-red-500">Remove</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        ))}
-                                    </ScrollView>
-                                )
-                        }
-
-                        <View className="flex-row gap-2 mt-4">
-
-                            <TouchableOpacity
-                                className="flex-1 bg-gray-200 p-4 rounded-lg"
-                                onPress={() => setShowCart(false)}
-                            >
-                                <Text className="text-center font-medium">Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                className="flex-1 bg-blue-500 p-4 rounded-lg disabled:opacity-50"
-                                onPress={submitRequest}
-                                disabled={cart.length === 0}
-                            >
-                                <Text className="text-center text-white font-medium">Submit Request</Text>
-                            </TouchableOpacity>
-
-                        </View>
-                    </View>
+            {/* Quick Actions */}
+            <View className="px-6">
+                <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-xl font-bold text-gray-900">Quick Actions</Text>
                 </View>
-            </Modal>
-        </View>
+
+                <View className="space-y-4 m-1">
+                    <QuickActionButton
+                        icon="plus"
+                        title="New Request"
+                        subtitle="Create equipment request"
+                        onPress={() => router.push("(user)/requestform")}
+                    />
+
+                </View>
+                <View className="space-y-4">
+                    <QuickActionButton
+                        icon="calendar"
+                        title="Lab Schedule"
+                        subtitle="Weekly schedule"
+                        onPress={() => router.push("(user)/labschedule")}
+                    />
+
+                </View>
+            </View>
+
+
+        </ScrollView>
     );
 };
 
