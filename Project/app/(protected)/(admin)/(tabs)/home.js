@@ -41,7 +41,7 @@ const Home = () => {
                         <TouchableOpacity
                             className="w-[48%] h-32 bg-blue-50 rounded-xl p-4 justify-center items-center border border-blue-100"
                             activeOpacity={0.7}
-                        // onPress = {()=>{router.push("/(admin)/")}}>
+                             onPress = {()=>{router.push("/(admin)/analytics")}}
                         >
                             <MaterialIcons name="analytics" size={32} color="#3b82f6" />
                             <Text className="mt-2 text-lg font-bold text-blue-500">Analytics</Text>

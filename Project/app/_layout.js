@@ -40,7 +40,7 @@ const MainLayout = () => {
   }, [isAuthenticated, segments]);
 
   return (
-    <Stack>
+    <Stack initialRouteName="index">
       <Stack.Screen
         name="index"
         options={{

@@ -11,7 +11,6 @@ const Invoice = () => {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     fetchRequestData();
   }, [requestId]);
