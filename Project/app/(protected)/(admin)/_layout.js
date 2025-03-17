@@ -74,7 +74,7 @@ const AdminLayout = () => {
           presentation: "containedTransparentModal",
           animation: "slide_from_right"
         }} />
-      <Stack.Screenr
+      <Stack.Screen
         name="labdetails"
         options={{
           title: "Lab Details",

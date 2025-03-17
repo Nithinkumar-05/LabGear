@@ -78,9 +78,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RefreshProvider>
-        <NotificationProvider>
-          <MainLayout />
-        </NotificationProvider>
+        <MainLayout />
       </RefreshProvider>
     </AuthProvider >
   );

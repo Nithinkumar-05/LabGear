@@ -1,8 +1,7 @@
-import { Tabs,Redirect } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import CustomHeader from "@/components/CustomHeader";
 import { useAuth } from "@/routes/AuthContext";
-import Loading from "@/components/Loading";
 import ProtectedRoute from "@/utils/ProtectedRoute";
 export default function TabsLayout() {
   const { user } = useAuth();
@@ -24,10 +23,10 @@ export default function TabsLayout() {
   //       return <Redirect href="/signIn"/>
   //    }
   // }
-  
+
   return (
     <ProtectedRoute allowedRoles={["user"]}> {/* Allow only users */}
-      <Tabs initialRouteName="index" options={{headerShown: false}}>
+      <Tabs initialRouteName="index" options={{ headerShown: false }}>
         {/* Index Tab (Default Tab) */}
         <Tabs.Screen
           name="index"
@@ -39,7 +38,7 @@ export default function TabsLayout() {
             header: () => <CustomHeader />, // Custom header
           }}
         />
-     
+
         {/* Profile Tab */}
         <Tabs.Screen
           name="profile"
@@ -48,7 +47,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person" size={size} color={color} />
             ),
-            tabBarHideOnKeyboard:true,
+            tabBarHideOnKeyboard: true,
             header: () => <CustomHeader />, // Custom header
           }}
         />

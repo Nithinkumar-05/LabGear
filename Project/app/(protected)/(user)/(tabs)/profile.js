@@ -8,7 +8,6 @@ import CustomBanner from "@/components/Banner";
 import Avatar from "@/components/AvatarGenerator";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig"; // Fixed import
-import Loading from "@/components/Loading";
 import { Activity } from "lucide-react-native";
 // Helper component for section titles
 const SectionTitle = ({ title }) => (
