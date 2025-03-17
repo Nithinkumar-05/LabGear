@@ -1,18 +1,19 @@
 import React, { useRef, useState } from "react";
-import { FlatList, Text, View, Dimensions } from "react-native";
+import { FlatList, Text, View, Dimensions, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "react-native-paper";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-const { width } = Dimensions.get("window");
 import { useRouter } from "expo-router";
+
+const { width } = Dimensions.get("window");
+
 const CarouselDots = ({ data, activeIndex }) => {
     return (
-        <View className="flex-row justify-center items-center space-x-2 mt-4  bottom-28">
+        <View style={styles.dotContainer}>
             {data.map((_, index) => (
                 <View
                     key={index}
-                    className={`h-2 w-2 rounded-full m-1 ${activeIndex === index ? "bg-gray-800 w-4" : "bg-gray-300"
-                        }`}
+                    style={[styles.dot, activeIndex === index ? styles.activeDot : styles.inactiveDot]}
                 />
             ))}
         </View>
@@ -41,7 +42,7 @@ export default function OnBoarding() {
     }).current;
 
     return (
-        <View className="flex-1">
+        <View style={styles.container}>
             <FlatList
                 ref={flatListRef}
                 data={flatlist_data}
@@ -52,28 +53,26 @@ export default function OnBoarding() {
                 viewabilityConfig={viewabilityConfig}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={{ width }} className="p-4 justify-center items-center">
+                    <View style={[styles.slide, { width }]}>
                         {item.icon}
-
-                        <Text className="text-xl font-bold text-gray-900 m-4">{item.title}</Text>
-                        <Text className="text-base text-gray-600">{item.description}</Text>
-
+                        <Text style={styles.title}>{item.title}</Text>
+                        <Text style={styles.description}>{item.description}</Text>
                     </View>
-                )
-                }
+                )}
             />
 
-            < CarouselDots data={flatlist_data} activeIndex={activeIndex} />
+            <CarouselDots data={flatlist_data} activeIndex={activeIndex} />
 
-            <View className="flex-row justify-between items-center p-4">
+            <View style={styles.buttonContainer}>
                 <Button
-                    // theme={{ colors: { primary: "blue" } }}
                     mode="outlined"
                     onPress={() => { router.replace("/signIn") }}
-                >Skip</Button>
+                    style={styles.skipButton}
+                >
+                    Skip
+                </Button>
                 <Button
                     mode="contained"
-                    // theme={{ colors: { primary: "blue" } }}
                     onPress={() => {
                         if (activeIndex === 2) {
                             AsyncStorage.setItem("onboarding", "true");
@@ -81,8 +80,67 @@ export default function OnBoarding() {
                         } else {
                             flatListRef.current.scrollToIndex({ index: activeIndex + 1 });
                         }
-                    }}>{activeIndex === 2 ? "Sign In" : "Next"}</Button>
+                    }}
+                    style={styles.nextButton}
+                >
+                    {activeIndex === 2 ? "Sign In" : "Next"}
+                </Button>
             </View>
-        </View >
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#F9FAFB', // Light background color
+    },
+    slide: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        paddingTop: 40,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1F2937', // Dark text color
+        marginVertical: 10,
+    },
+    description: {
+        fontSize: 16,
+        color: '#4B5563', // Medium gray text color
+        textAlign: 'center',
+        marginHorizontal: 20,
+    },
+    dotContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginVertical: 10,
+    },
+    dot: {
+        height: 8,
+        width: 8,
+        borderRadius: 4,
+        marginHorizontal: 4,
+    },
+    activeDot: {
+        backgroundColor: '#3B82F6', // Active dot color
+        width: 12,
+    },
+    inactiveDot: {
+        backgroundColor: '#D1D5DB', // Inactive dot color
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 16,
+    },
+    skipButton: {
+        flex: 1,
+        marginRight: 8,
+    },
+    nextButton: {
+        flex: 1,
+    },
+});
