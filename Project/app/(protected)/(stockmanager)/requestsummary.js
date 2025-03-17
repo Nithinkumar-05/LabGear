@@ -159,7 +159,11 @@ const RequestSummary = () => {
   
       await addDoc(approvedRef, {
         requestId,
+        title:request.title,
+        description:request.description,
+        username:request.username,
         labId: request.labId,
+        labName:request.lab.labName,
         approvedBy: user.uid, 
         approvedAt: new Date().toISOString(),
         equipment: approvedEquipment,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { db, requestsRef } from '@/firebaseConfig';
+import { db, approvedRequestsRef } from '@/firebaseConfig';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
 
@@ -32,23 +32,23 @@ const RequestCard = ({ request, onPress }) => (
   >
     <View className="flex-row justify-between items-start mb-2">
       <View className="flex-1">
-        <Text className="font-medium text-gray-900">{request.title}</Text>
-        <Text className="text-sm text-gray-500 mt-1">{request.username}</Text>
+        <Text className="font-medium text-gray-900">{request.labName || request.labId || 'Unknown Lab'}</Text>
+        <Text className="text-sm text-gray-500 mt-1">Request #{request.requestId?.substring(0, 8)}</Text>
       </View>
-      <Text className="text-blue-500 font-bold">₹{request.totalAmount?.toLocaleString()}</Text>
+      <Text className="text-blue-500 font-bold">₹{request.totalAmountSpent?.toLocaleString()}</Text>
     </View>
     <View className="flex-row items-center mt-2">
       <View className="flex-row items-center">
         <Feather name="calendar" size={14} color="#6B7280" />
         <Text className="text-xs text-gray-500 ml-1">
-          {new Date(request.approvedAt).toLocaleDateString()}
+          {new Date(request.completedAt || request.approvedAt).toLocaleDateString()}
         </Text>
       </View>
       <View className="w-1 h-1 bg-gray-300 rounded-full mx-2" />
       <View className="flex-row items-center">
         <Feather name="package" size={14} color="#6B7280" />
         <Text className="text-xs text-gray-500 ml-1">
-          {request.equipment?.length || 0} items
+          {(request.equipment?.length || 0) + (request.equipmentExpenses?.length || 0)} items
         </Text>
       </View>
     </View>
@@ -75,9 +75,9 @@ const BudgetTracker = () => {
   const fetchRequests = async () => {
     try {
       const q = query(
-        collection(db, 'Requests'),
-        where('status', '==', 'approved'),
-        orderBy('approvedAt', 'desc')
+        approvedRequestsRef,
+        where('status', '==', 'completed'),
+        orderBy('completedAt', 'desc')
       );
       const querySnapshot = await getDocs(q);
       const requestsData = querySnapshot.docs.map(doc => ({
@@ -95,20 +95,24 @@ const BudgetTracker = () => {
 
   const calculateInsights = (requestsData) => {
     // Total spent
-    const totalSpent = requestsData.reduce((sum, req) => sum + (req.totalAmount || 0), 0);
+    const totalSpent = requestsData.reduce((sum, req) => sum + (req.totalAmountSpent || 0), 0);
 
-    // Monthly breakdown
+    // Monthly breakdown - using completedAt date
     const monthlySpending = {};
     requestsData.forEach(req => {
-      const month = new Date(req.approvedAt).toLocaleString('default', { month: 'short' });
-      monthlySpending[month] = (monthlySpending[month] || 0) + (req.totalAmount || 0);
+      const dateToUse = req.completedAt || req.approvedAt;
+      if (!dateToUse) return;
+      
+      const month = new Date(dateToUse).toLocaleString('default', { month: 'short' });
+      monthlySpending[month] = (monthlySpending[month] || 0) + (req.totalAmountSpent || 0);
     });
 
-    // Category breakdown
+    // Category breakdown - using equipmentExpenses
     const categorySpending = {};
     requestsData.forEach(req => {
-      req.equipment?.forEach(item => {
-        categorySpending[item.type] = (categorySpending[item.type] || 0) +
+      req.equipmentExpenses?.forEach(item => {
+        const itemName = item.name;
+        categorySpending[itemName] = (categorySpending[itemName] || 0) +
           (parseFloat(item.amountSpent) || 0);
       });
     });
@@ -119,14 +123,20 @@ const BudgetTracker = () => {
 
     // Calculate trend (comparing last two months)
     const sortedMonths = Object.entries(monthlySpending)
-      .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+      .sort((a, b) => {
+        // Convert month names to dates for proper sorting
+        const monthToNum = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5, 
+                            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 };
+        return monthToNum[b[0]] - monthToNum[a[0]];
+      });
+      
     const recentTrend = sortedMonths.length >= 2
       ? ((sortedMonths[0][1] - sortedMonths[1][1]) / sortedMonths[1][1]) * 100
       : 0;
 
     // Find top category
     const topCategory = Object.entries(categorySpending)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
     setInsights({
       totalSpent,
@@ -157,7 +167,7 @@ const BudgetTracker = () => {
 
       <ScrollView className="flex-1 p-4">
         {/* Key Metrics */}
-        <View className="space-y-3 mb-6">
+        <View className="space-y-3 mb-6 gap-3">
           <InsightCard
             title="Total Budget Spent"
             value={insights.totalSpent}
@@ -168,7 +178,7 @@ const BudgetTracker = () => {
           <InsightCard
             title="Monthly Average"
             value={insights.monthlyAverage}
-            subtitle="Based on approved requests"
+            subtitle="Based on completed requests"
             icon="trending-up"
             color="green"
           />
@@ -184,37 +194,45 @@ const BudgetTracker = () => {
         {/* Category Breakdown */}
         <View className="bg-white rounded-2xl p-4 mb-6">
           <Text className="text-lg font-bold text-gray-900 mb-4">Category Breakdown</Text>
-          {Object.entries(insights.categoryBreakdown).map(([category, amount]) => (
-            <View key={category} className="mb-3">
-              <View className="flex-row justify-between mb-1">
-                <Text className="text-gray-600 capitalize">{category}</Text>
-                <Text className="font-medium">₹{amount.toLocaleString()}</Text>
+          {Object.entries(insights.categoryBreakdown).length > 0 ? (
+            Object.entries(insights.categoryBreakdown).map(([category, amount]) => (
+              <View key={category} className="mb-3">
+                <View className="flex-row justify-between mb-1">
+                  <Text className="text-gray-600 capitalize">{category}</Text>
+                  <Text className="font-medium">₹{amount.toLocaleString()}</Text>
+                </View>
+                <View className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <View
+                    className="h-full bg-blue-500 rounded-full"
+                    style={{
+                      width: `${(amount / insights.totalSpent) * 100}%`
+                    }}
+                  />
+                </View>
               </View>
-              <View className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-blue-500 rounded-full"
-                  style={{
-                    width: `${(amount / insights.totalSpent) * 100}%`
-                  }}
-                />
-              </View>
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text className="text-gray-500 text-center py-4">No category data available</Text>
+          )}
         </View>
 
         {/* Recent Requests */}
         <View className="mb-6">
           <Text className="text-lg font-bold text-gray-900 mb-4">Recent Approvals</Text>
-          {requests.map(request => (
-            <RequestCard
-              key={request.id}
-              request={request}
-              onPress={() => router.push({
-                pathname: "/(admin)/invoice",
-                params: { requestId: request.id }
-              })}
-            />
-          ))}
+          {requests.length > 0 ? (
+            requests.map(request => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                onPress={() => router.push({
+                  pathname: "/(admin)/invoice",
+                  params: { requestId: request.id }
+                })}
+              />
+            ))
+          ) : (
+            <Text className="text-gray-500 text-center py-4">No completed requests found</Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

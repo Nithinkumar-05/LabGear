@@ -15,11 +15,11 @@ const UserCard = ({ user, onPress }) => (
         activeOpacity={0.7}
     >
         <View className="p-4">
-            <View className="flex-row items-center space-x-4">
+            <View className="flex-row items-center space-x-4 gap-2">
                 {user.personal.profileImgUrl ? (
                     <Image
                         source={{ uri: user.personal.profileImgUrl }}
-                        className="w-16 h-16 rounded-2xl"
+                        className="w-16 h-16 rounded-full"
                         contentFit="cover"
                     />
                 ) : (
@@ -125,7 +125,7 @@ const Users = () => {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Fixed Header */}
-            <View className="bg-white px-6 pt-6 pb-4 shadow-sm">
+            <View className="bg-gray-100 px-6 pt-6 pb-4 shadow-sm">
                 <View className="flex-row items-center justify-between mb-6">
                     <View>
                         <Text className="text-2xl font-bold text-gray-900">

@@ -75,6 +75,13 @@ const AdminLayout = () => {
           animation: "slide_from_right"
         }} />
       <Stack.Screen
+        name="analytics"
+        options={{
+          title:"Analytics",
+          presentation:"fullScreenModal",
+          animation:"slide_from_right"
+        }}/>
+      <Stack.Screen
         name="labdetails"
         options={{
           title: "Lab Details",
