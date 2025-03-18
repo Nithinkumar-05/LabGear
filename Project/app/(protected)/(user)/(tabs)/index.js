@@ -138,7 +138,12 @@ const Home = () => {
                         subtitle="Create equipment request"
                         onPress={() => router.push("(user)/requestform")}
                     />
-
+                    <QuickActionButton
+                        icon="box"
+                        title="Equipment"
+                        subtitle="View lab equipment"
+                        onPress={() => router.push("(user)/equipment")}
+                    />
                 </View>
                 <View className="space-y-4">
                     <QuickActionButton

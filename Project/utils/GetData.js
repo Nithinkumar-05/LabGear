@@ -32,7 +32,7 @@ export default async function fetchData(userId) {
         const requestsQuery = query(collection(db, "Requests"), where("labId", "==", labId));
         const requestsSnap = await getDocs(requestsQuery);
         const requests = requestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+        console.log(labData);
         return { user: { id: userSnap.id, ...userData }, lab: { id: labSnap.id, ...labData }, requests };
     } catch (error) {
         console.error("Error fetching data:", error);

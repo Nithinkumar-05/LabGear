@@ -47,8 +47,11 @@ const _layout = () => {
         name="labschedule"
         options={{ presentation: "fullScreenModal", title: "Lab Schedule", animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="equipment"
+        options={{ presentation: "fullScreenModal", title: "Equipment", animation: "slide_from_left" }}
+      />
     </Stack>
-
 
   );
 };
