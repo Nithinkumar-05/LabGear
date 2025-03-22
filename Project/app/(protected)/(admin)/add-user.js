@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { usersRef } from '@/firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
+
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
 import { useAuth } from '@/routes/AuthContext';
@@ -56,7 +57,7 @@ export default function AddUser() {
 
       await signOut(auth);
 
-      await signInWithEmailAndPassword(auth, adminUser.email, "admin@123"); 
+      await signInWithEmailAndPassword(auth, adminUser.email, "admin@123");
       setLoading(false);
       return { success: true, data: userData };
     } catch (e) {

@@ -25,7 +25,7 @@ const EditProfile = () => {
       designation: user.professional?.designation || '',
       empId: user.professional?.empId || '',
     },
-    selectedLabId: user.labDetails.labId || '', // Store just the lab ID
+    selectedLabId: user.labDetails.labId || '', 
   });
 
   const [currentLab, setCurrentLab] = useState(formData.selectedLabId || null);
@@ -36,9 +36,8 @@ const EditProfile = () => {
   // Fetch and set initial lab details
   useEffect(() => {
     const fetchCurrentLab = async () => {
-      if (user.labDetails?._key?.path?.segments) {
+      if (user.labDetails!=="") {
         try {
-          // Extract lab ID from the path segments
           const labId = user.labDetails._key.path.segments[user.labDetails._key.path.segments.length - 1];
           const labDoc = await getDoc(doc(labsRef, labId));
 

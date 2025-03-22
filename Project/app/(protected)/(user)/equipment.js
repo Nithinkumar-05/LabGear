@@ -1,11 +1,10 @@
 import React, { useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRefresh } from '@/routes/RefreshContext'; // Adjust the import path as necessary
+import { useRefresh } from '@/routes/RefreshContext'; 
 
 const EquipmentDetails = () => {
-    const { data } = useRefresh(); // Access the data from RefreshContext
-
+    const { data } = useRefresh();
     const renderItem = ({ item }) => (
         <TouchableOpacity className="bg-white rounded-lg p-4 mb-4 shadow-md">
             <View className="flex-row items-center">
@@ -21,8 +20,11 @@ const EquipmentDetails = () => {
 
     return (
         <View className="flex-1 bg-gray-50 p-4">
+            <View>
+                <Text>Lab Name : {data.lab.labName}</Text>
+            </View>
             <FlatList
-                data={data.lab.equipment || []} // Access the equipment property from the context data
+                data={data.lab.equipment || []} 
                 renderItem={renderItem}
                 keyExtractor={(item, index) => index.toString()}
                 showsVerticalScrollIndicator={false}

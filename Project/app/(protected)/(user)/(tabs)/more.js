@@ -40,7 +40,7 @@ export default function More() {
       <MenuItem
         iconName="calendar-today"
         title="Lab Schedule"
-        onPress={() => navigateToScreen('LabSchedule')}
+        onPress={() => navigateToScreen('/(user)/labschedule')}
       />
       <MenuItem
         iconName={"receipt"}

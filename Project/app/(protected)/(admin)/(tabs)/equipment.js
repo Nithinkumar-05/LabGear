@@ -159,7 +159,7 @@ const Equipment = () => {
                         Equipment
                     </Text>
                     <Text className="text-sm text-gray-500 mt-1">
-                        Manage and monitor lab equipments
+                        Manage and monitor equipments
                     </Text>
                     <View className="mt-4 flex-row items-center">
                         <Search

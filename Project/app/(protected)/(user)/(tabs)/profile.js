@@ -9,14 +9,14 @@ import Avatar from "@/components/AvatarGenerator";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig"; // Fixed import
 import { Activity } from "lucide-react-native";
-// Helper component for section titles
+// component for section titles
 const SectionTitle = ({ title }) => (
   <View className="px-4 py-2 bg-gray-50">
     <Text className="text-sm font-medium text-gray-500">{title}</Text>
   </View>
 );
 
-// Helper component for profile information sections
+//component for profile information sections
 const ProfileSection = ({ iconName, title, value }) => (
   <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
     <MaterialIcons name={iconName} size={24} color="#4B5563" />
@@ -116,7 +116,6 @@ export default function Profile() {
         />
       )}
 
-      {/* Profile Header */}
       <View className="bg-white py-6 items-center  mb-2">
         <View className="w-24 h-24 rounded-full items-center justify-center bg-gray-200 mb-3 overflow-hidden">
           {userDetails.personal?.profileImgUrl ? (

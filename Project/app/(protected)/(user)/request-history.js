@@ -9,7 +9,6 @@ import { Timestamp } from "firebase/firestore";
 
 const extractDate = (timestamp) => {
     if (!timestamp) return null;
-
     const dateObj = timestamp.toDate();
     return dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 };
@@ -75,7 +74,7 @@ const RequestHistory = () => {
     }, [refreshData]);
 
     const filteredRequests = data?.requests?.filter(req =>
-        (filter === "All" || req.status === filter) &&
+        (filter === "all" || req.status === filter) &&
         req.id.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
@@ -128,6 +127,7 @@ const RequestHistory = () => {
                             <Menu.Item
                                 key={option.label}
                                 onPress={() => {
+                                
                                     setFilter(option.label);
                                     setMenuVisible(false);
                                 }}
@@ -149,8 +149,8 @@ const RequestHistory = () => {
                     {filterOptions.map(option => (
                         <TouchableOpacity
                             key={option.label}
-                            onPress={() => setFilter(option.label)}
-                            className={`mr-2 h-8 px-3 rounded-full flex-row items-center justify-center ${filter === option.label
+                            onPress={() => setFilter(option.label.toLowerCase())}
+                            className={`mr-2 h-8 px-3 rounded-full flex-row items-center justify-center ${filter === option.label.toLowerCase()
                                 ? "bg-blue-100 border border-blue-200"
                                 : "bg-gray-50 border border-gray-100"
                                 }`}
@@ -161,7 +161,7 @@ const RequestHistory = () => {
                                 color={filter === option.label ? "#1d4ed8" : "#6b7280"}
                             />
                             <Text
-                                className={`ml-1.5 text-sm font-medium ${filter === option.label
+                                className={`ml-1.5 text-sm font-medium ${filter === option.label.toLowerCase()
                                     ? "text-blue-700"
                                     : "text-gray-600"
                                     }`}

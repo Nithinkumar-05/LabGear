@@ -170,9 +170,7 @@ const Analytics = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <Text className="text-center font-bold text-lg py-4">Lab Budget Analytics</Text>
-
-      {/* Horizontal Lab Selector */}
+      
       <View className="mb-4">
         <Text className="text-gray-700 font-semibold px-4 mb-2">Select Lab</Text>
         <ScrollView
@@ -209,7 +207,7 @@ const Analytics = () => {
 
       {selectedLab ? (
         <ScrollView className="flex-1 px-4">
-          {/* Lab Info Card */}
+  
           <View className="bg-white p-4 rounded-lg shadow mb-4">
             <Text className="font-bold text-lg">{selectedLab.labName}</Text>
             <View className="flex-row justify-between mt-2">
@@ -222,7 +220,6 @@ const Analytics = () => {
             </View>
           </View>
 
-          {/* Budget Usage Pie Chart */}
           <View className="bg-white p-4 rounded-lg shadow mb-4">
             <Text className="font-semibold text-gray-800 mb-2">Budget Utilization</Text>
             <PieChart
@@ -236,7 +233,7 @@ const Analytics = () => {
             />
           </View>
 
-          {/* Equipment Expenses Bar Chart */}
+
           <View className="bg-white p-4 rounded-lg shadow mb-4">
             <Text className="font-semibold text-gray-800 mb-2">Equipment Expenses</Text>
             <BarChart
@@ -252,7 +249,7 @@ const Analytics = () => {
             />
           </View>
 
-          {/* Department Comparison */}
+
           <View className="bg-white p-4 rounded-lg shadow mb-4">
             <Text className="font-semibold text-gray-800 mb-2">Department Budget Comparison</Text>
             <LineChart
@@ -264,7 +261,7 @@ const Analytics = () => {
             />
           </View>
 
-          {/* Equipment List */}
+     
           <View className="bg-white p-4 rounded-lg shadow mb-4">
             <Text className="font-semibold text-gray-800 mb-2">Equipment Details</Text>
             {selectedLab.equipmentExpenses?.map((item, index) => (

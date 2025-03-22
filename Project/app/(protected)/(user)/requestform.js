@@ -217,7 +217,7 @@ const NewRequestForm = () => {
                         label="Description"
                         value={formData.description}
                         onChangeText={(text) => setFormData({ ...formData, description: text })}
-                        placeholder="Add any additional details about your request..."
+                        placeholder="Add any additional details like technical specifications required."
                         multiline
                         icon="align-left"
                     />

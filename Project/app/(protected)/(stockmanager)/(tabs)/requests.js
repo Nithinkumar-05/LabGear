@@ -5,6 +5,14 @@ import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 
+import { Timestamp } from "firebase/firestore";
+
+const extractDate = (timestamp) => {
+    if (!timestamp) return null;
+    const dateObj = timestamp.toDate();
+    return dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+};
+
 const Requests = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('pending');
@@ -25,7 +33,8 @@ const Requests = () => {
       if (status === 'approved') {
         q = query(
           requestsRef,
-          where('status', 'in', ['approved', 'partially approved'])
+          where('status', 'in', ['approved', 'partially approved']),
+          orderBy('createdAt')
         );
       } else {
         q = query(
@@ -121,7 +130,7 @@ const Requests = () => {
         <View className="flex-row justify-between mb-2">
           <Text className="text-gray-600 text-sm">Date:</Text>
           <Text className="text-gray-800 text-sm font-medium">
-            {new Date(item.createdAt).toLocaleDateString()}
+          {extractDate(item.createdAt)}
           </Text>
         </View>
         

@@ -4,7 +4,7 @@ import { useAuth } from '@/routes/AuthContext';
 import HomeLoader from '@/components/HomeLoader';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { db } from '@/firebaseConfig'; // Import your Firebase configuration
+import { db } from '@/firebaseConfig';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 const Home = () => {
@@ -18,7 +18,7 @@ const Home = () => {
         const fetchRecentRequests = async () => {
             try {
                 const requestsRef = collection(db, "Requests");
-                const q = query(requestsRef, orderBy("createdAt", "desc"), limit(5)); // Fetch recent requests
+                const q = query(requestsRef, orderBy("createdAt", "desc"), limit(5));
                 const querySnapshot = await getDocs(q);
                 const requests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setRecentRequests(requests);
@@ -31,7 +31,7 @@ const Home = () => {
         const fetchLowStockEquipment = async () => {
             try {
                 const equipmentRef = collection(db, "components");
-                const q = query(equipmentRef, orderBy("stock", "asc"), limit(5)); // Fetch low stock equipment
+                const q = query(equipmentRef, orderBy("quantity", "asc"), limit(5)); 
                 const querySnapshot = await getDocs(q);
                 const equipment = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setLowStockEquipment(equipment);
@@ -63,9 +63,6 @@ const Home = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.welcomeText}>
-                Welcome, {user ? user.username : 'Guest'}
-            </Text>
             <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                     <MaterialIcons name="flash-on" size={24} color="#3b82f6" />
@@ -83,8 +80,8 @@ const Home = () => {
                                 params: { requestId: item.id },
                             })} // Navigate to request details
                         >
-                            <Text style={styles.cardTitle}>{item.title}</Text>
-                            <Text style={styles.cardDescription}>{item.description}</Text>
+                            <Text style={styles.cardTitle}>{item.title || "No title"}</Text>
+                            <Text style={styles.cardDescription}>{item.description || "No description"}</Text>
                         </TouchableOpacity>
                     )}
                 />
@@ -101,7 +98,7 @@ const Home = () => {
                     renderItem={({ item }) => (
                         <View style={styles.card}>
                             <Text style={styles.cardTitle}>{item.name}</Text>
-                            <Text style={styles.cardDescription}>Stock: {item.stock}</Text>
+                            <Text style={styles.cardDescription}>Current Stock: {item.quantity}</Text>
                         </View>
                     )}
                 />
